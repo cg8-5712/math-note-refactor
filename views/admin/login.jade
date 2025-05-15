@@ -1,0 +1,12 @@
+extends ../layout
+
+block content
+  .container
+    h1.page-title 管理员登录
+    if error
+      .error-message= error
+    form(method="POST" action="/admin/login")
+      .form-group
+        label(for="password") 密码
+        input(type="password" name="password" required)
+      button(type="submit") 登录

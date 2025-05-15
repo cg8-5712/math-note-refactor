@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  .container
+    h1.page-title= title
+    .table-responsive
+      table.table
+        thead.thead-light
+          tr
+            th.text-center 日期
+            th.text-center 标题
+            th.text-center 上传时间
+        tbody
+          each note in notes
+            tr
+              td.text-center
+                a.note-link(href='/notes/' + note.date)= note.date
+              td.text-center
+                a.note-link(href='/notes/' + note.date)= note.title
+              td.text-center
+                small.text-muted= note.uploadDate

@@ -1,0 +1,44 @@
+extends ../layout
+
+block content
+  .container
+    h1.page-title 管理面板
+    .admin-controls
+      form#newNoteForm(method="POST" action="/admin/notes")
+        input(type="text" name="date" placeholder="日期 (MMDD)" required pattern="\\d{4}")
+        input(type="text" name="title" placeholder="标题" required)
+        button(type="submit") 添加新记录
+        
+    table.table
+      thead.thead-light
+        tr
+          th 日期
+          th 标题
+          th 上传时间
+          th 操作
+      tbody
+        each note in notes
+          tr(data-date=note.date)
+            td= note.date
+            td
+              span.note-title= note.title
+              input.edit-title(type="text" value=note.title style="display: none;")
+            td= note.uploadDate
+            td
+              button.edit-btn(type="button") 编辑
+              button.save-btn(type="button" style="display: none;") 保存
+              button.delete-btn(type="button") 删除
+              
+    #imageEditor.modal(style="display: none;")
+      .modal-content
+        span.close-modal &times;
+        h2 图片编辑
+        .image-upload
+          input#imageUpload(type="file" multiple accept="image/*")
+          label(for="imageUpload") 上传新图片
+        .image-preview-grid
+          #sortableImages
+
+block scripts
+  script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js")
+  script(src="/javascripts/admin.js")
