@@ -95,8 +95,8 @@ router.get('/', requireAuth, async (req, res) => {
 
 router.post('/notes', requireAuth, async (req, res) => {
   const { date, title } = req.body;
-  const uploadDate = formatDate(new Date());
-  const newNote = `${date}|${title}|${uploadDate}\n`;
+  const dateInfo = formatDate(new Date());
+  const newNote = `${dateInfo.fullDate}|${title}|${dateInfo.timestamp}\n`;
   
   try {
     await fs.appendFile('data/index.txt', newNote);
@@ -112,12 +112,13 @@ router.post('/notes', requireAuth, async (req, res) => {
 router.put('/notes/:date', requireAuth, async (req, res) => {
   const { date } = req.params;
   const { title } = req.body;
+  const dateInfo = formatDate(new Date());
   
   try {
     const notes = await readNoteData();
     const updatedNotes = notes.map(note => {
       if (note.date === date) {
-        return { ...note, title, uploadDate: formatDate(new Date()) };
+        return { ...note, title, uploadDate: dateInfo.timestamp };
       }
       return note;
     });
@@ -143,7 +144,17 @@ router.delete('/notes/:date', requireAuth, async (req, res) => {
 });
 
 function formatDate(date) {
-  return `${date.getMonth() + 1}.${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return {
+    Date: `${month}.${day}`,
+    displayDate: `${month}.${day}`,
+    timestamp: `${year}.${month}.${day} ${hours}:${minutes}`
+  };
 }
 
 module.exports = router;

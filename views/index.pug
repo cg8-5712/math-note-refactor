@@ -14,8 +14,8 @@ block content
           each note in notes
             tr
               td.text-center
-                a.note-link(href='/notes/' + note.date)= note.date
+                a.note-link(href='/notes/' + note.date.replace(/\./g, ''))= note.displayDate || note.date
               td.text-center
-                a.note-link(href='/notes/' + note.date)= note.title
+                a.note-link(href='/notes/' + note.date.replace(/\./g, ''))= note.title
               td.text-center
                 small.text-muted= note.uploadDate
