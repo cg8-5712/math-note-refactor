@@ -169,4 +169,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
 });
+
+async function deleteNote(date) {
+    if (!confirm('确定要删除这条笔记吗？')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/${date}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('删除失败');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            // 删除成功后刷新页面
+            window.location.reload();
+        } else {
+            throw new Error(data.error || '删除失败');
+        }
+    } catch (error) {
+        console.error('Delete failed:', error);
+        alert('删除失败: ' + error.message);
+    }
+};

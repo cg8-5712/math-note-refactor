@@ -25,9 +25,9 @@ block content
               input.edit-title(type="text" value=note.title style="display: none;")
             td= note.uploadDate
             td
-              button.edit-btn(type="button") 编辑
-              button.save-btn(type="button" style="display: none;") 保存
-              button.delete-btn(type="button") 删除
+              a.edit-btn(href=`/admin/${note.date}`) 编辑
+              button.delete-btn(onclick=`deleteNote('${note.date}')`) 删除
+
               
     #imageEditor.modal(style="display: none;")
       .modal-content
