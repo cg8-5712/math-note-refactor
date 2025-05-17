@@ -76,7 +76,7 @@ router.post('/login', (req, res) => {
   const { password } = req.body;
   if (adminConfig.verifyPassword(password)) {
     req.session.isAuthenticated = true;
-    res.redirect('/admin/dashboard');
+    res.redirect('/admin');
   } else {
     res.render('admin/login', { 
       title: '管理员登录',
@@ -85,7 +85,7 @@ router.post('/login', (req, res) => {
   }
 });
 
-router.get('/dashboard', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   const notes = await readNoteData();
   res.render('admin/dashboard', { 
     title: '管理面板',
@@ -100,7 +100,7 @@ router.post('/notes', requireAuth, async (req, res) => {
   
   try {
     await fs.appendFile('data/index.txt', newNote);
-    res.redirect('/admin/dashboard');
+    res.redirect('/admin');
   } catch (error) {
     res.status(500).render('error', {
       message: '保存失败',
