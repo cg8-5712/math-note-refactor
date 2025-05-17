@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const adminConfig = require('../config/admin');
-const { readNoteData } = require('../utils/noteData');
+const { readNoteData, saveNoteData } = require('../utils/noteData');
 const multer = require('multer');
 const fs = require('fs').promises;
 
