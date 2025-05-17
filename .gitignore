@@ -34,3 +34,4 @@ coverage/
 
 # Private files
 public/images/
+/data/index.txt
