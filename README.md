@@ -1,6 +1,24 @@
-# 📚 Math Notes Management System
+<h1 align="center">
+  📚 Math Notes Management System
+</h1>
 
-A sleek and intuitive web application for managing and displaying mathematics classroom whiteboard photos.
+<p align="center">
+  A sleek and intuitive web application for managing and displaying mathematics classroom whiteboard photos. 
+</p>
+
+<p align="center">
+  <a href="https://www.codefactor.io/repository/github/Bj35-Dev/math_note/">
+    <img src="https://www.codefactor.io/repository/github/Bj35-Dev/math_note/badge" alt="CodeFactor" />
+  </a>
+
+  <a href="https://github.com/Bj35-Dev/math_note/activity">
+    <img src="https://img.shields.io/github/last-commit/Bj35-Dev/math_note/main" alt="Last Commit"/>
+  </a>
+
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/Bj35-Dev/math_note" alt="GPL-3.0\"/>
+  </a>
+</p>
 
 ## ✨ Features
 
