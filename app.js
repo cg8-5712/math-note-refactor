@@ -22,11 +22,7 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// Add admin routes
-const adminRouter = require('./routes/admin');
-app.use('/admin', adminRouter);
-
-// 路由处理
+// Root routes
 app.get('/', async (req, res) => {
   const notes = await readNoteData();
   res.render('index', {
@@ -34,6 +30,10 @@ app.get('/', async (req, res) => {
     notes: notes
   });
 });
+
+// Admin routes
+const adminRouter = require('./routes/admin');
+app.use('/admin', adminRouter);
 
 app.get('/notes/:date', (req, res) => {
   const date = req.params.date;
@@ -54,7 +54,7 @@ app.get('/notes/:date', (req, res) => {
   });
 });
 
-// 错误处理
+// Error handler
 app.use((req, res, next) => {
   res.status(404).render('error', {
     message: '页面未找到',
