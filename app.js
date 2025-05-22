@@ -2,7 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
-const { readNoteData } = require('./utils/noteData');
+const { readNoteData } = require('./src/utils/noteData');
 const app = express();
 
 // 视图引擎设置
@@ -32,7 +32,7 @@ app.get('/', async (req, res) => {
 });
 
 // Admin routes
-const adminRouter = require('./routes/admin');
+const adminRouter = require('./src/routes/admin');
 app.use('/admin', adminRouter);
 
 app.get('/notes/:date', (req, res) => {
