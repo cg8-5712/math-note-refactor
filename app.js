@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const configureExpress = require('./src/config/express');
+const helmet = require('helmet');
+const csrf = require('csurf');
 
 // Initialize express app
 const app = express();
@@ -10,12 +12,20 @@ const app = express();
 configureExpress(app);
 
 // Configure session before routes
+app.use(helmet());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 3600000
+  }
 }));
+
+app.use(csrf());
 
 // Routes
 app.use('/', require('./src/routes/index'));

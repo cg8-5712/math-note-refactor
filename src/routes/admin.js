@@ -4,7 +4,18 @@ const { requireAuth } = require('../middleware/auth');
 const noteController = require('../controllers/noteController');
 const imageController = require('../controllers/imageController');
 const adminConfig = require('../config/admin');
-const upload = require('../config/multer');
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('只允许上传图片文件！'), false);
+    }
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 15 * 1024 * 1024 // 限制5MB
+  }
+});
 
 // Authentication routes
 router.get('/login', (req, res) => {
@@ -22,6 +33,11 @@ router.post('/login', (req, res) => {
       error: '密码错误'
     });
   }
+});
+
+router.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/admin/login');
 });
 
 // Note routes

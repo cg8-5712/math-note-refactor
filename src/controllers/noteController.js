@@ -4,7 +4,7 @@ const { readNoteData, saveNoteData } = require('../utils/noteData');
 const { formatDate } = require('../utils/dateFormatter');
 
 class NoteController {
-  async getDashboard(req, res) {
+  async getDashboard(req, res, next) {
     try {
       const notes = await readNoteData();
       res.render('admin/dashboard', { 
