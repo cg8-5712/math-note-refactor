@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-const app = require('../src/app');
+const app = require('../app');
 const debug = require('debug')('math-note:server');
 const http = require('http');
+const config = require('../src/config');
 
 // Normalize port
 const normalizePort = (val) => {
@@ -13,7 +14,7 @@ const normalizePort = (val) => {
 };
 
 // Get port from environment and store in Express
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(process.env.PORT || config.port || '3000');
 app.set('port', port);
 
 // Create HTTP server
