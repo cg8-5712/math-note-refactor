@@ -6,15 +6,7 @@ const http = require('http');
 const config = require('../src/config');
 
 // Normalize port
-const normalizePort = (val) => {
-  const port = parseInt(val, 10);
-  if (isNaN(port)) return val;
-  if (port >= 0) return port;
-  return false;
-};
-
-// Get port from environment and store in Express
-const port = normalizePort(process.env.PORT || config.port || '3000');
+const port = normalizePort(config.port);
 app.set('port', port);
 
 // Create HTTP server
@@ -22,9 +14,19 @@ const server = http.createServer(app);
 
 // Listen on provided port
 server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+// Normalize a port into a number, string, or false
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+  if (isNaN(port)) return val;
+  if (port >= 0) return port;
+  return false;
+}
 
 // Event listener for HTTP server "error" event
-server.on('error', (error) => {
+function onError(error) {
   if (error.syscall !== 'listen') throw error;
 
   const bind = typeof port === 'string'
@@ -44,13 +46,13 @@ server.on('error', (error) => {
     default:
       throw error;
   }
-});
+}
 
 // Event listener for HTTP server "listening" event
-server.on('listening', () => {
+function onListening() {
   const addr = server.address();
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
-});
+}

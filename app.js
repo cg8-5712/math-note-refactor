@@ -1,9 +1,10 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const configureExpress = require('./src/config/express');
 const helmet = require('helmet');
 const csrf = require('csurf');
+const configureExpress = require('./src/config/express');
+const errorHandler = require('./src/middleware/errorHandler');
 
 // Initialize express app
 const app = express();
@@ -11,8 +12,10 @@ const app = express();
 // Load configurations
 configureExpress(app);
 
-// Configure session before routes
+// Security middleware
 app.use(helmet());
+
+// Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -25,13 +28,14 @@ app.use(session({
   }
 }));
 
+// CSRF protection
 app.use(csrf());
 
 // Routes
 app.use('/', require('./src/routes/index'));
 app.use('/admin', require('./src/routes/admin'));
 
-// Error handler
-app.use(require('./src/middleware/errorHandler'));
+// Error handler must be last
+app.use(errorHandler);
 
 module.exports = app;

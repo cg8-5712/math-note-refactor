@@ -4,18 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 const noteController = require('../controllers/noteController');
 const imageController = require('../controllers/imageController');
 const adminConfig = require('../config/admin');
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-      return cb(new Error('只允许上传图片文件！'), false);
-    }
-    cb(null, true);
-  },
-  limits: {
-    fileSize: 15 * 1024 * 1024 // 限制5MB
-  }
-});
+const upload = require('../config/multer');
 
 // Authentication routes
 router.get('/login', (req, res) => {
