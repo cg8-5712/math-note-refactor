@@ -6,6 +6,7 @@ block content
     if error
       .error-message= error
     form(method="POST" action="/admin/login")
+      input(type="hidden" name="_csrf" value=csrfToken)
       .form-group
         label(for="password") 密码
         input(type="password" name="password" required)

@@ -11,6 +11,13 @@ const errorHandler = (err, req, res, next) => {
       error: { status: 404 }
     });
   }
+
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).render('error', {
+      message: '无效的请求令牌',
+      error: { status: 403 }
+    });
+  }
   
   res.status(err.status || 500).render('error', {
     message: process.env.NODE_ENV === 'development' ? err.message : '服务器错误',
