@@ -35,29 +35,25 @@ class DateFormatter {
    * @returns {boolean} 是否是有效的日期
    */
   static isValidDate(dateStr) {
-    if (typeof dateStr !== 'string') {
-      return false;
-    }
-
-    if (!/^\d{4}$/.test(dateStr)) {
-      return false;
-    }
-
-    const month = parseInt(dateStr.substring(0, 2));
-    const day = parseInt(dateStr.substring(2, 4));
+    // 修改验证逻辑以支持MMDD和YYYYMMDD两种格式
+    if (typeof dateStr !== 'string') return false;
     
-    if (month < 1 || month > 12) {
-      return false;
+    if (dateStr.length === 4) {
+      // MMDD format
+      return /^\d{4}$/.test(dateStr);
+    } else if (dateStr.length === 8) {
+      // YYYYMMDD format
+      return /^\d{8}$/.test(dateStr);
     }
-    
-    const year = new Date().getFullYear();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    
-    if (day < 1 || day > daysInMonth) {
-      return false;
+    return false;
+  }
+  
+  // 添加年份处理方法
+  static inferYear(dateStr) {
+    if (dateStr.length === 8) {
+      return dateStr.substring(0, 4);
     }
-    
-    return true;
+    return new Date().getFullYear().toString();
   }
 
   /**
@@ -100,6 +96,39 @@ class DateFormatter {
     }
 
     return date;
+  }
+
+  /**
+   * 将YYYYMMDD格式转换为带点的日期格式
+   * @param {string} dateStr - YYYYMMDD格式的日期字符串
+   * @returns {string} YYYY.MM.DD格式的日期
+   * @throws {Error} 如果日期格式无效
+   */
+  static convertFromPlainDate(dateStr) {
+    if (!/^\d{8}$/.test(dateStr)) {
+      throw new Error('Invalid date format: must be YYYYMMDD format');
+    }
+    
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    
+    // Validate date
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date values');
+    }
+    
+    return `${year}.${month}.${day}`;
+  }
+
+  /**
+   * 将带点的日期格式转换为纯数字格式
+   * @param {string} dateStr - YYYY.MM.DD格式的日期字符串
+   * @returns {string} YYYYMMDD格式的日期
+   */
+  static convertToPlainDate(dateStr) {
+    return dateStr.replace(/\./g, '');
   }
 }
 

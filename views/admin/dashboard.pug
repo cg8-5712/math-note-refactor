@@ -26,19 +26,8 @@ block content
               input.edit-title(type="text" value=note.title style="display: none;")
             td= note.uploadDate
             td
-              a.edit-btn(href=`/admin/${note.date}`) 编辑
-              button.delete-btn(onclick=`deleteNote('${note.date}')`) 删除
+              a.edit-btn(href=`/admin/${note.date.replace(/\./g, '')}`) 编辑
+              button.delete-btn(onclick=`deleteNote('${note.date.replace(/\./g, '')}')`) 删除
 
-    #imageEditor.modal(style="display: none;")
-      .modal-content
-        span.close-modal &times;
-        h2 图片编辑
-        .image-upload
-          input#imageUpload(type="file" multiple accept="image/*")
-          label(for="imageUpload") 上传新图片
-        .image-preview-grid
-          #sortableImages
-
-block scripts
-  script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js")
-  script(src="/javascripts/admin.js")
+//- block scripts
+//-   script(src="/javascripts/admin.js")

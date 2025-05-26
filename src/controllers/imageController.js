@@ -30,6 +30,11 @@ class ImageController {
         return res.status(400).json({ error: '没有上传文件' });
       }
       
+      const { date } = req.params;
+      // 确保目录存在
+      const imagesDir = path.join(__dirname, '../../public/images', date);
+      await fsPromises.mkdir(imagesDir, { recursive: true });
+      
       const uploadedFiles = req.files.map(file => ({
         filename: file.filename,
         path: file.path

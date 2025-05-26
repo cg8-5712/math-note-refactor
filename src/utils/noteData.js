@@ -22,10 +22,18 @@ async function readNoteData() {
 }
 
 async function saveNoteData(notes) {
-  const content = notes
-    .map(note => `${note.date}|${note.title}|${note.uploadDate}`)
-    .join('\n');
-  await fs.writeFile(INDEX_FILE, content + '\n', 'utf8');
+  try {
+    // 创建临时文件
+    const tempPath = INDEX_FILE + '.tmp';
+    const content = notes
+      .map(note => `${note.date}|${note.title}|${note.uploadDate}`)
+      .join('\n');
+    
+    await fs.writeFile(tempPath, content + '\n', 'utf8');
+    await fs.rename(tempPath, INDEX_FILE);
+  } catch (error) {
+    throw new Error(`Failed to save notes: ${error.message}`);
+  }
 }
 
 module.exports = {

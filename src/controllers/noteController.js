@@ -18,9 +18,11 @@ class NoteController {
 
   async getNote(req, res, next) {
     try {
-      const { date } = req.params;
+      const plainDate = req.params.date;  // YYYYMMDD format
+      const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+      
       const notes = await readNoteData();
-      const note = notes.find(n => n.date === date);
+      const note = notes.find(n => n.date === formattedDate);
       
       if (!note) {
         return res.status(404).render('error', { 
@@ -31,7 +33,10 @@ class NoteController {
 
       res.render('admin/edit', { 
         title: '修改笔记',
-        note: note
+        note: {
+          ...note,
+          plainDate: plainDate // Add plainDate for form actions
+        }
       });
     } catch (error) {
       next(error);
@@ -56,19 +61,33 @@ class NoteController {
   }
 
   async updateNote(req, res, next) {
-    try {
-      const { date } = req.params;
-      const { title } = req.body;
-      const dateInfo = DateFormatter.formatDate(new Date());
-      
-      const notes = await readNoteData();
-      const updatedNotes = notes.map(note => {
-        if (note.date === date) {
-          return { ...note, title, uploadDate: dateInfo.timestamp };
-        }
-        return note;
-      });
-      
+  try {
+    const plainDate = req.params.date;
+    const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: '标题不能为空' });
+    }
+    
+    const notes = await readNoteData();
+    const noteExists = notes.some(note => note.date === formattedDate);
+    
+    if (!noteExists) {
+      return res.status(404).json({ error: '笔记不存在' });
+    }
+
+    const updatedNotes = notes.map(note => {
+      if (note.date === formattedDate) {
+        return {
+          ...note,
+          title,
+          uploadDate: DateFormatter.formatDate(new Date()).timestamp
+        };
+      }
+      return note;
+    });
+    
       await saveNoteData(updatedNotes);
       res.json({ success: true });
     } catch (error) {
@@ -78,13 +97,14 @@ class NoteController {
 
   async deleteNote(req, res, next) {
     try {
-      const { date } = req.params;
+      const plainDate = req.params.date;
+      const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
       
       const notes = await readNoteData();
-      const filteredNotes = notes.filter(note => note.date !== date);
+      const filteredNotes = notes.filter(note => note.date !== formattedDate);
       await saveNoteData(filteredNotes);
 
-      const imageDir = path.join(__dirname, '../../public/images', date.replace(/\./g, ''));
+      const imageDir = path.join(__dirname, '../../public/images', plainDate);
       await this.deleteImageDirectory(imageDir);
 
       res.json({ success: true });

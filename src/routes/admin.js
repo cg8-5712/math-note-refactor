@@ -33,8 +33,14 @@ router.get('/logout', (req, res) => {
 router.get('/', requireAuth, noteController.getDashboard);
 router.get('/:date', requireAuth, noteController.getNote);
 router.post('/notes', requireAuth, noteController.createNote);
-router.put('/:date', requireAuth, noteController.updateNote);
+// router.put('/:date', requireAuth, noteController.updateNote);
 router.delete('/:date', requireAuth, noteController.deleteNote);
+router.post('/:date/update', requireAuth, (req, res, next) => {
+  if (req.body._method === 'PUT') {
+    return noteController.updateNote(req, res, next);
+  }
+  next();
+});
 
 // Image routes
 router.get('/:date/images', requireAuth, imageController.getImages);
