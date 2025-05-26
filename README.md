@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.codefactor.io/repository/github/Bj35-Dev/math_note/">
-    <img src="https://www.codefactor.io/repository/github/Bj35-Dev/math_note/badge" alt="CodeFactor" />
+  <a href="https://www.codefactor.io/repository/github/cg8-5712/math-note-refactor/">
+    <img src="https://www.codefactor.io/repository/github/cg8-5712/math-note-refactor/badge" alt="CodeFactor" />
   </a>
 
   <a href="https://github.com/Bj35-Dev/math_note/activity">
