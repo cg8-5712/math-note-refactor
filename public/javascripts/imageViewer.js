@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.image-thumbnail').forEach(img => {
+        img.addEventListener('click', () => showFullscreen(img));
+    });
+});
+
 function showFullscreen(img) {
     const fullscreenDiv = document.createElement('div');
     fullscreenDiv.className = 'fullscreen';
@@ -5,12 +11,12 @@ function showFullscreen(img) {
     fullscreenImg.src = img.src;
     fullscreenDiv.appendChild(fullscreenImg);
 
-    fullscreenDiv.onclick = function() {
+    fullscreenDiv.addEventListener('click', () => {
         fullscreenDiv.classList.remove('active');
         setTimeout(() => {
             document.body.removeChild(fullscreenDiv);
         }, 300); // Wait for transition to complete
-    };
+    });
 
     document.body.appendChild(fullscreenDiv);
     // Trigger reflow to ensure transition works

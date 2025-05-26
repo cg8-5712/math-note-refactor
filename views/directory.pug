@@ -8,6 +8,7 @@ block content
     div.image-grid
       each image in images
         div.image-item
-          img(src=image, alt="板书图片" onclick="showFullscreen(this)")
+          img.image-thumbnail(src=image, alt="板书图片")
+
 block scripts
   script(src="/javascripts/imageViewer.js")
