@@ -1,22 +1,82 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Form submission handling
-  const editForm = document.getElementById('editForm');
-  editForm.addEventListener('submit', handleSubmit);
+  let hasChanges = false;
+  let originalImages = [];
+  const imageGrid = document.getElementById('sortableImages');
+  
+  // Store original state
+  if (imageGrid) {
+    originalImages = Array.from(imageGrid.querySelectorAll('.image-item')).map(item => ({
+      filename: item.querySelector('.delete-image').dataset.filename,
+      src: item.querySelector('img').src
+    }));
+  }
 
-  // Initialize sortable for images
-  const sortable = new Sortable(document.getElementById('sortableImages'), {
-    animation: 150,
-    onEnd: updateImageOrder
-  });
+  // Cancel button handler
+  const cancelBtn = document.querySelector('.cancel-btn[data-action="cancel"]');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!hasChanges) {
+        window.location.href = '/admin';
+        return;
+      }
+      
+      if (confirm('确定要取消编辑吗？所有更改将会丢失')) {
+        try {
+          const response = await fetch(`${window.location.pathname}/restore`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('input[name="_csrf"]').value
+            },
+            body: JSON.stringify({ originalImages })
+          });
 
-  // Image upload handling
+          if (!response.ok) {
+            throw new Error('恢复失败');
+          }
+
+          window.location.href = '/admin';
+        } catch (error) {
+          console.error('恢复状态失败:', error);
+          alert('恢复原始状态失败，请重试');
+        }
+      }
+    });
+  }
+
+  // Handle image changes
+  const handleStateChange = () => {
+    hasChanges = true;
+  };
+
+  // Image upload handler
   const imageUpload = document.getElementById('imageUpload');
-  imageUpload.addEventListener('change', handleImageUpload);
-
-  // Delete image buttons
-  document.querySelectorAll('.delete-image').forEach(btn => {
-    btn.addEventListener('click', handleImageDelete);
+  imageUpload.addEventListener('change', async (e) => {
+    await handleImageUpload(e);
+    handleStateChange();
   });
+
+  // Delete image handler
+  document.querySelectorAll('.delete-image').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const result = await handleImageDelete.call(btn, e);
+      if (result && result.success) {
+        handleStateChange();
+      }
+    });
+  });
+
+  // Initialize sortable
+  if (imageGrid) {
+    new Sortable(imageGrid, {
+      animation: 150,
+      onEnd: () => {
+        handleStateChange();
+        updateImageOrder();
+      }
+    });
+  }
 });
 
 async function handleSubmit(event) {
@@ -77,11 +137,11 @@ async function handleImageUpload(e) {
 }
 
 async function handleImageDelete(e) {
-  e.preventDefault(); // 添加这行防止事件冒泡
+  e.preventDefault();
+  e.stopPropagation(); // 阻止事件冒泡
   
-  const confirmed = confirm('确定要删除这张图片吗？');
-  if (!confirmed) {
-    return; // 如果用户点击取消，直接返回
+  if (!confirm('确定要删除这张图片吗？')) {
+    return;
   }
 
   const filename = this.dataset.filename;
@@ -162,5 +222,13 @@ async function updateImageOrder() {
   } catch (err) {
     console.error('重排序错误:', err);
     alert('更新图片顺序失败，请重试');
+  }
+}
+
+// Move handleCancel function near other handlers
+async function handleCancel(e) {
+  e.preventDefault();
+  if (confirm('确定要取消编辑吗？未保存的更改将会丢失')) {
+    window.location.href = '/admin';
   }
 }

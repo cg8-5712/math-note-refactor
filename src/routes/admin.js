@@ -34,6 +34,7 @@ router.get('/', requireAuth, noteController.getDashboard);
 router.get('/:date', requireAuth, noteController.getNote);
 router.post('/notes', requireAuth, noteController.createNote);
 router.post('/:date/upload', requireAuth, upload.array('images'), imageController.uploadImages);
+router.post('/:date/restore', requireAuth, imageController.restoreImages);
 router.post('/:date/reorder', requireAuth, imageController.updateImageOrder);  // Changed from PUT to POST
 router.delete('/:date/images/:image', requireAuth, imageController.deleteImage);
 router.post('/:date/update', requireAuth, (req, res, next) => {
