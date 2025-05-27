@@ -17,31 +17,42 @@ class NoteController {
   }
 
   async getNote(req, res, next) {
-    try {
-      const plainDate = req.params.date;  // YYYYMMDD format
-      const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
-      
-      const notes = await readNoteData();
-      const note = notes.find(n => n.date === formattedDate);
-      
-      if (!note) {
-        return res.status(404).render('error', { 
-          message: '笔记不存在',
-          error: { status: 404 }
-        });
-      }
-
-      res.render('admin/edit', { 
-        title: '修改笔记',
-        note: {
-          ...note,
-          plainDate: plainDate // Add plainDate for form actions
-        }
+  try {
+    const plainDate = req.params.date;  // YYYYMMDD format
+    const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+    
+    const notes = await readNoteData();
+    const note = notes.find(n => n.date === formattedDate);
+    
+    if (!note) {
+      return res.status(404).render('error', { 
+        message: '笔记不存在',
+        error: { status: 404 }
       });
-    } catch (error) {
-      next(error);
     }
+
+    // 获取图片文件列表
+    const imageDir = path.join(__dirname, '../../public/images', plainDate);
+    let images = [];
+    try {
+      const files = await fsPromises.readdir(imageDir);
+      images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+    } catch (error) {
+      console.log('No images found:', error);
+    }
+
+    res.render('admin/edit', { 
+      title: '修改笔记',
+      note: {
+        ...note,
+        plainDate,
+        images
+      }
+    });
+  } catch (error) {
+    next(error);
   }
+}
 
   async createNote(req, res, next) {
     try {

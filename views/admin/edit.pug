@@ -2,74 +2,42 @@ extends ../layout
 
 block content
   .container
-    h1.page-title 编辑笔记
+    .header-section
+      a.back-btn(href="/admin") < 返回管理面板
+      h1.page-title 编辑笔记
+    
     .note-info
       p 日期: #{note.date}
       p 标题: #{note.title}
     
-    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}/update` onsubmit="handleSubmit(event)")
+    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}/update`)
       input(type="hidden" name="_csrf" value=csrfToken)
       input(type="hidden" name="_method" value="PUT")
       .form-group
         label(for="title") 标题
         input#title(type="text" name="title" value=note.title required)
       
+      .form-actions
+        button.btn.save-btn(type="submit") 保存修改
+        a.btn.cancel-btn(href="/admin") 取消
+      
       .image-section
         h2 图片管理
         .image-upload
-          input#imageUpload(type="file" multiple accept="image/*")
-          label(for="imageUpload") 上传新图片
+          input#imageUpload(type="file" name="images" multiple accept="image/*")
+          label.btn(for="imageUpload") 上传新图片
         
         #sortableImages.image-grid
-          if note.images && note.images.length
-            each image, index in note.images
-              .image-item(data-index=index)
-                img(src=`/uploads/${image.filename}` alt=`图片 ${index + 1}`)
-                button.delete-image(type="button" data-filename=image.filename) ×
+          - const imageDir = `/images/${note.plainDate}`
+          - const images = note.images || []
+          if images.length
+            each image in images
+              .image-item
+                img.image-thumbnail(src=`${imageDir}/${image}` alt="板书图片")
+                button.delete-image(type="button" data-filename=image) ×
           else
             .no-images 暂无图片
 
 block scripts
   script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js")
   script(src="/javascripts/edit.js")
-  script.
-    document.addEventListener('DOMContentLoaded', function() {
-      const sortableContainer = document.getElementById('sortableImages');
-      
-      if (sortableContainer) {
-        new Sortable(sortableContainer, {
-          animation: 150,
-          onEnd: function(evt) {
-            // 处理排序完成后的逻辑
-            console.log('排序完成');
-          }
-        });
-      }
-    });
-    async function handleSubmit(event) {
-      event.preventDefault();
-      const form = event.target;
-      try {
-        const response = await fetch(form.action, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': form.querySelector('[name="_csrf"]').value
-          },
-          body: JSON.stringify({
-            title: form.querySelector('#title').value,
-            _method: 'PUT'
-          })
-        });
-
-        if (response.ok) {
-          window.location.href = '/admin';
-        } else {
-          const data = await response.json();
-          alert(data.error || '保存失败');
-        }
-      } catch (error) {
-        console.error('保存出错:', error);
-        alert('保存失败，请重试');
-      }
-    }

@@ -25,22 +25,52 @@ class ImageController {
   }
 
   async uploadImages(req, res, next) {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: '没有上传文件' });
+    }
+    
+    const { date } = req.params;
+    // 确保目录存在
+    const imagesDir = path.join(__dirname, '../../public/images', date);
+    await fsPromises.mkdir(imagesDir, { recursive: true });
+    
+    const uploadedFiles = req.files.map(file => ({
+      filename: file.filename,
+      path: path.relative(path.join(__dirname, '../../public'), file.path)
+    }));
+    
+    res.json({ 
+      success: true, 
+      files: uploadedFiles,
+      message: '上传成功'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async deleteImage(req, res, next) {
+  try {
+    const { date, image } = req.params;
+    const imagePath = path.join(__dirname, '../../public/images', date, image);
+
+    // 检查文件是否存在
     try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: '没有上传文件' });
+      await fsPromises.access(imagePath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return res.status(404).json({ error: '图片不存在' });
       }
-      
-      const { date } = req.params;
-      // 确保目录存在
-      const imagesDir = path.join(__dirname, '../../public/images', date);
-      await fsPromises.mkdir(imagesDir, { recursive: true });
-      
-      const uploadedFiles = req.files.map(file => ({
-        filename: file.filename,
-        path: file.path
-      }));
-      
-      res.json({ success: true, files: uploadedFiles });
+      throw error;
+    }
+
+      // 确认删除后再执行删除操作
+      await fsPromises.unlink(imagePath);
+      res.json({ 
+        success: true,
+        message: '删除成功'
+      });
     } catch (error) {
       next(error);
     }
@@ -51,22 +81,16 @@ class ImageController {
       const { date } = req.params;
       const { images } = req.body;
       
+      if (!Array.isArray(images)) {
+        return res.status(400).json({ error: '无效的图片顺序数据' });
+      }
+
       const orderPath = path.join(__dirname, '../../public/images', date, 'order.json');
       await fsPromises.writeFile(
         orderPath,
         JSON.stringify(images, null, 2)
       );
-      res.json({ success: true });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deleteImage(req, res, next) {
-    try {
-      const { date, image } = req.params;
-      const imagePath = path.join(__dirname, '../../public/images', date, image);
-      await fsPromises.unlink(imagePath);
+      
       res.json({ success: true });
     } catch (error) {
       next(error);
