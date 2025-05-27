@@ -77,87 +77,72 @@ async deleteImage(req, res, next) {
   }
 
   async updateImageOrder(req, res, next) {
-    try {
-      const { date } = req.params;
-      const { images } = req.body;
-      
-      if (!Array.isArray(images)) {
-        return res.status(400).json({ error: '无效的图片顺序数据' });
+      try {
+        const { date } = req.params;
+        const { images } = req.body;
+        
+        if (!Array.isArray(images)) {
+          return res.status(400).json({ error: '无效的图片顺序数据' });
+        }
+
+        const orderPath = path.join(__dirname, '../../public/images', date, 'order.json');
+        await fsPromises.writeFile(
+          orderPath,
+          JSON.stringify(images, null, 2)
+        );
+        
+        res.json({ success: true });
+      } catch (error) {
+        next(error);
       }
-
-      const orderPath = path.join(__dirname, '../../public/images', date, 'order.json');
-      await fsPromises.writeFile(
-        orderPath,
-        JSON.stringify(images, null, 2)
-      );
-      
-      res.json({ success: true });
-    } catch (error) {
-      next(error);
     }
-  }
 
-  // Add restore function
-  async restoreImages(req, res, next) {
+    // Add restore function
+    async restoreImages(req, res, next) {
   try {
     const { date } = req.params;
-    const { originalImages } = req.body;
+    const { originalState } = req.body;
     
-    if (!Array.isArray(originalImages)) {
-      return res.status(400).json({ error: '无效的图片数据' });
+    if (!originalState || !originalState.images) {
+      return res.status(400).json({ error: '无效的恢复数据' });
     }
 
     const imageDir = path.join(__dirname, '../../public/images', date);
     
     try {
       // Ensure directory exists
-      await fsPromises.access(imageDir);
+      await fsPromises.mkdir(imageDir, { recursive: true });
+      
+      // Get current files
+      const currentFiles = await fsPromises.readdir(imageDir);
+      const currentImages = currentFiles.filter(file => 
+        /\.(jpg|jpeg|png|gif)$/i.test(file)
+      );
+
+      // Delete files that aren't in original state
+      for (const file of currentImages) {
+        if (!originalState.images.includes(file)) {
+          await fsPromises.unlink(path.join(imageDir, file));
+        }
+      }
+
+      // Update order.json
+      const orderPath = path.join(imageDir, 'order.json');
+      await fsPromises.writeFile(
+        orderPath,
+        JSON.stringify(originalState.images, null, 2)
+      );
+
+      res.json({ 
+        success: true,
+        message: '已恢复原始状态'
+      });
     } catch (error) {
       if (error.code === 'ENOENT') {
         return res.status(404).json({ error: '图片目录不存在' });
       }
       throw error;
     }
-
-    // Get current images
-    const currentFiles = await fsPromises.readdir(imageDir);
-    const currentImages = currentFiles.filter(file => 
-      /\.(jpg|jpeg|png|gif)$/i.test(file)
-    );
-
-    // Track deleted files
-    const deletedFiles = [];
-
-    // Delete images that aren't in originalImages
-    for (const file of currentImages) {
-      if (!originalImages.some(img => img.filename === file)) {
-        try {
-          await fsPromises.unlink(path.join(imageDir, file));
-          deletedFiles.push(file);
-        } catch (error) {
-          console.error(`Failed to delete file ${file}:`, error);
-        }
-      }
-    }
-
-    // Write order file
-    const orderPath = path.join(imageDir, 'order.json');
-    await fsPromises.writeFile(
-      orderPath,
-      JSON.stringify(
-        originalImages.map(img => img.filename).filter(filename => 
-          currentImages.includes(filename)
-        ),
-        null, 
-        2
-      )
-    );
-
-    res.json({ 
-      success: true,
-      deletedFiles,
-      message: '已恢复原始状态'
-    });
   } catch (error) {
     next(error);
   }

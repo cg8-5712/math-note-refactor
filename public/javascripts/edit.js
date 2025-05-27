@@ -1,21 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-  let hasChanges = false;
-  let originalImages = [];
+  const form = document.getElementById('editForm');
   const imageGrid = document.getElementById('sortableImages');
+  let hasChanges = false;
   
   // Store original state
-  if (imageGrid) {
-    originalImages = Array.from(imageGrid.querySelectorAll('.image-item')).map(item => ({
-      filename: item.querySelector('.delete-image').dataset.filename,
-      src: item.querySelector('img').src
-    }));
-  }
+  const originalState = {
+    title: form.dataset.originalTitle,
+    images: JSON.parse(imageGrid.dataset.originalImages || '[]')
+  };
 
-  // Cancel button handler
+  // Track changes
+  const handleStateChange = () => {
+    hasChanges = true;
+  };
+
+  // Handle cancel button
   const cancelBtn = document.querySelector('.cancel-btn[data-action="cancel"]');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      
       if (!hasChanges) {
         window.location.href = '/admin';
         return;
@@ -29,35 +33,36 @@ document.addEventListener('DOMContentLoaded', function() {
               'Content-Type': 'application/json',
               'X-CSRF-Token': document.querySelector('input[name="_csrf"]').value
             },
-            body: JSON.stringify({ originalImages })
+            body: JSON.stringify({ originalState })
           });
 
           if (!response.ok) {
-            throw new Error('恢复失败');
+            const data = await response.json();
+            throw new Error(data.error || '恢复失败');
           }
 
           window.location.href = '/admin';
         } catch (error) {
-          console.error('恢复状态失败:', error);
+          console.error('恢复失败:', error);
           alert('恢复原始状态失败，请重试');
         }
       }
     });
   }
 
-  // Handle image changes
-  const handleStateChange = () => {
-    hasChanges = true;
-  };
+  // Track title changes
+  form.querySelector('#title').addEventListener('input', handleStateChange);
 
-  // Image upload handler
+  // Track image uploads
   const imageUpload = document.getElementById('imageUpload');
   imageUpload.addEventListener('change', async (e) => {
-    await handleImageUpload(e);
-    handleStateChange();
+    const result = await handleImageUpload(e);
+    if (result && result.success) {
+      handleStateChange();
+    }
   });
 
-  // Delete image handler
+  // Track image deletions
   document.querySelectorAll('.delete-image').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const result = await handleImageDelete.call(btn, e);
@@ -67,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Initialize sortable
+  // Initialize sortable with change tracking
   if (imageGrid) {
     new Sortable(imageGrid, {
       animation: 150,
