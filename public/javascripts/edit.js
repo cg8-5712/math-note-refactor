@@ -72,6 +72,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  document.getElementById('editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const title = form.querySelector('#title').value;
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title })
+        });
+        
+        if (response.ok) {
+            // After successful save, redirect to admin dashboard
+            window.location.href = '/admin';
+        } else {
+            const data = await response.json();
+            alert(data.error || '保存失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('保存失败');
+    }
+});
+
   // Initialize sortable with change tracking
   if (imageGrid) {
     new Sortable(imageGrid, {
