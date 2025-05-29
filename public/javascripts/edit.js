@@ -62,6 +62,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Add form submit handler
+  const editForm = document.getElementById('editForm');
+  if (editForm) {
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault(); // 阻止表单默认提交
+      
+      try {
+        const response = await fetch(editForm.action, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': editForm.querySelector('input[name="_csrf"]').value
+          },
+          body: JSON.stringify({
+            title: editForm.querySelector('#title').value,
+            _method: 'PUT'
+          })
+        });
+
+        if (response.ok) {
+          window.location.href = '/admin'; // 成功后直接重定向到管理面板
+        } else {
+          const data = await response.json();
+          throw new Error(data.error || '保存失败');
+        }
+      } catch (error) {
+        console.error('保存失败:', error);
+        alert(error.message || '保存失败，请重试');
+      }
+    });
+  }
+
   // Track image deletions
   document.querySelectorAll('.delete-image').forEach(btn => {
     btn.addEventListener('click', async (e) => {

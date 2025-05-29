@@ -10,7 +10,7 @@ block content
       p 日期: #{note.date}
       p 标题: #{note.title}
     
-    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}/update` data-original-title=note.title)
+    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}/update`)
       input(type="hidden" name="_csrf" value=csrfToken)
       input(type="hidden" name="_method" value="PUT")
       .form-group
