@@ -19,18 +19,10 @@ class NoteController {
   async getNote(req, res, next) {
   try {
     const plainDate = req.params.date;  // YYYYMMDD format
-    // const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
-    const formattedDate = DateFormatter.convertToPlainDate(plainDate); // YYYY.MM.DD format
-
+    const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+    
     const notes = await readNoteData();
     const note = notes.find(n => n.date === formattedDate);
-    
-    console.log('Fetching note for plain date:', plainDate);
-    console.log('Formatted date:', formattedDate);
-    console.log('All notes:', notes);
-    console.log('Note date:', notes.find(n => n.date === formattedDate));
-    console.log('Note found:', note);
-    console.log('Fetching note for date:', formattedDate);
     
     if (!note) {
       return res.status(404).render('error', { 
@@ -80,49 +72,35 @@ class NoteController {
   }
 
   async updateNote(req, res, next) {
-    try {
-      const plainDate = req.params.date;
-      const formattedDate = DateFormatter.convertToPlainDate(plainDate);
-      const { title } = req.body;
-      
-      if (!title) {
-        return res.status(400).json({ error: '标题不能为空' });
+  try {
+    const plainDate = req.params.date;
+    const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ error: '标题不能为空' });
+    }
+    
+    const notes = await readNoteData();
+    const noteExists = notes.some(note => note.date === formattedDate);
+    
+    if (!noteExists) {
+      return res.status(404).json({ error: '笔记不存在' });
+    }
+
+    const updatedNotes = notes.map(note => {
+      if (note.date === formattedDate) {
+        return {
+          ...note,
+          title,
+          uploadDate: DateFormatter.formatDate(new Date()).timestamp
+        };
       }
-      
-      const notes = await readNoteData();
-      const noteExists = notes.some(note => note.date === formattedDate);
-      
-      if (!noteExists) {
-        const imageDir = path.join(__dirname, '../../public/images', plainDate);
-        try {
-          await fsPromises.access(imageDir);
-          const newNote = {
-            date: formattedDate,
-            title,
-            uploadDate: DateFormatter.formatDate(new Date()).timestamp
-          };
-          notes.push(newNote);
-          await saveNoteData(notes);
-          return res.json({ success: true });
-        } catch (error) {
-          return res.status(404).json({ error: '笔记不存在' });
-        }
-      }
-  
-      const updatedNotes = notes.map(note => {
-        if (note.date === formattedDate) {
-          return {
-            ...note,
-            title,
-            uploadDate: DateFormatter.formatDate(new Date()).timestamp
-          };
-        }
-        return note;
-      });
-      
+      return note;
+    });
+    
       await saveNoteData(updatedNotes);
-      // Return success with redirect URL
-      res.json({ success: true, redirectUrl: '/admin' });
+      res.json({ success: true });
     } catch (error) {
       next(error);
     }
