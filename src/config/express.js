@@ -33,68 +33,36 @@ const configureExpress = (app) => {
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
-    cookie: config.session.cookie
+    cookie: {
+      ...config.session.cookie,
+      secure: process.env.NODE_ENV === 'production'
+    }
   }));
 
-  // Initialize CSRF protection
-  const csrfMiddleware = csrf({ 
+  // CSRF Protection
+  const csrfProtection = csrf({
     cookie: false
   });
-  
-  app.use((req, res, next) => {
-    csrfMiddleware(req, res, (err) => {
-      if (err && err.code === 'EBADCSRFTOKEN') {
-        console.error('CSRF Error:', err, 'Headers:', req.headers);
-        return res.status(403).json({
-          error: 'Invalid CSRF token',
-          message: '请刷新页面重试'
-        });
-      }
-      next(err);
-    });
-  });
 
-  // Add CSRF token to all responses
+  app.use(csrfProtection);
+
+  // Add CSRF token to responses
   app.use((req, res, next) => {
-    const token = req.csrfToken();
-    res.locals.csrfToken = token;
-    
-    // Store original methods
+    // Store token in res.locals for views
+    res.locals.csrfToken = req.csrfToken();
+
+    // Wrap json method to include token
     const originalJson = res.json;
-    const originalSend = res.send;
-    
-    // Override json method
     res.json = function(data) {
-      const responseData = {
+      return originalJson.call(this, {
         ...data,
-        csrfToken: token
-      };
-      return originalJson.call(this, responseData);
-    };
-    
-    // Override send method for non-JSON responses
-    res.send = function(data) {
-      if (typeof data === 'object' && !Buffer.isBuffer(data)) {
-        return res.json(data);
-      }
-      return originalSend.call(this, data);
-    };
-    
-    next();
-  });
-
-  // Error handler
-  app.use((err, req, res, next) => {
-    if (err.code === 'EBADCSRFTOKEN') {
-      return res.status(403).json({
-        error: 'Invalid CSRF token',
-        message: '请刷新页面重试'
+        csrfToken: req.csrfToken()
       });
-    }
-    next(err);
+    };
+
+    next();
   });
 
   return app;
 };
-
 module.exports = configureExpress;

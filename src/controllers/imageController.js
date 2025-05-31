@@ -18,7 +18,7 @@ class ImageController {
         !file.endsWith('.json') && /\.(jpg|jpeg|png|gif)$/i.test(file)
       );
       
-      res.json(images);
+      return res.json(images);
     } catch (error) {
       next(error);
     }
@@ -40,7 +40,7 @@ class ImageController {
       path: path.relative(path.join(__dirname, '../../public'), file.path)
     }));
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       files: uploadedFiles,
       message: '上传成功'
@@ -67,7 +67,7 @@ async deleteImage(req, res, next) {
 
       // 确认删除后再执行删除操作
       await fsPromises.unlink(imagePath);
-      res.json({ 
+      return res.json({ 
         success: true,
         message: '删除成功'
       });
@@ -108,13 +108,13 @@ async deleteImage(req, res, next) {
         JSON.stringify(images, null, 2)
       );
 
-      res.json({ 
+      return res.json({ 
         success: true,
         message: '更新顺序成功'
       });
     } catch (error) {
       console.error('Update image order error:', error);
-      res.status(500).json({ error: '更新顺序失败' });
+      return res.status(500).json({ error: '更新顺序失败' });
     }
   }
 
@@ -154,7 +154,7 @@ async deleteImage(req, res, next) {
         JSON.stringify(originalState.images, null, 2)
       );
 
-      res.json({ 
+      return res.json({ 
         success: true,
         message: '已恢复原始状态'
       });

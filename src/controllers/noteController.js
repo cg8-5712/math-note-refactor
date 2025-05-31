@@ -100,10 +100,7 @@ class NoteController {
       });
       
       await saveNoteData(updatedNotes);
-      res.json({ 
-        success: true,
-        csrfToken: req.csrfToken() 
-      });
+      return res.json({ success: true, message: 'ok' });
     } catch (error) {
       next(error);
     }
@@ -121,7 +118,7 @@ class NoteController {
       const imageDir = path.join(__dirname, '../../public/images', plainDate);
       await this.deleteImageDirectory(imageDir);
 
-      res.json({ success: true });
+      return res.json({ success: true });
     } catch (error) {
       next(error);
     }

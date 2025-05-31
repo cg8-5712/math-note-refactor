@@ -46,12 +46,6 @@ router.post('/:date/images', requireAuth, upload.array('images'), imageControlle
 router.put('/:date/images/order', requireAuth, express.json(), async (req, res, next) => {
   try {
     await imageController.updateImageOrder(req, res, next);
-    // 确保返回新的 CSRF token
-    res.json({ 
-      success: true,
-      message: '更新顺序成功',
-      csrfToken: req.csrfToken()
-    });
   } catch (error) {
     next(error);
   }
