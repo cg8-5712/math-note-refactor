@@ -77,25 +77,46 @@ async deleteImage(req, res, next) {
   }
 
   async updateImageOrder(req, res, next) {
-      try {
-        const { date } = req.params;
-        const { images } = req.body;
-        
-        if (!Array.isArray(images)) {
-          return res.status(400).json({ error: '无效的图片顺序数据' });
-        }
-
-        const orderPath = path.join(__dirname, '../../public/images', date, 'order.json');
-        await fsPromises.writeFile(
-          orderPath,
-          JSON.stringify(images, null, 2)
-        );
-        
-        res.json({ success: true });
-      } catch (error) {
-        next(error);
+    try {
+      const { date } = req.params;
+      const { images } = req.body;
+      
+      if (!Array.isArray(images)) {
+        return res.status(400).json({ error: '无效的图片顺序数据' });
       }
+
+      const imageDir = path.join(__dirname, '../../public/images', date);
+      
+      try {
+        await fsPromises.access(imageDir);
+      } catch (error) {
+        return res.status(404).json({ error: '图片目录不存在' });
+      }
+
+      // Verify all images exist
+      for (const image of images) {
+        try {
+          await fsPromises.access(path.join(imageDir, image));
+        } catch (error) {
+          return res.status(400).json({ error: `图片 ${image} 不存在` });
+        }
+      }
+
+      const orderPath = path.join(imageDir, 'order.json');
+      await fsPromises.writeFile(
+        orderPath,
+        JSON.stringify(images, null, 2)
+      );
+
+      res.json({ 
+        success: true,
+        message: '更新顺序成功'
+      });
+    } catch (error) {
+      console.error('Update image order error:', error);
+      res.status(500).json({ error: '更新顺序失败' });
     }
+  }
 
     // Add restore function
     async restoreImages(req, res, next) {

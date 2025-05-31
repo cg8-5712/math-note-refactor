@@ -72,35 +72,38 @@ class NoteController {
   }
 
   async updateNote(req, res, next) {
-  try {
-    const plainDate = req.params.date;
-    const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
-    const { title } = req.body;
-    
-    if (!title) {
-      return res.status(400).json({ error: '标题不能为空' });
-    }
-    
-    const notes = await readNoteData();
-    const noteExists = notes.some(note => note.date === formattedDate);
-    
-    if (!noteExists) {
-      return res.status(404).json({ error: '笔记不存在' });
-    }
-
-    const updatedNotes = notes.map(note => {
-      if (note.date === formattedDate) {
-        return {
-          ...note,
-          title,
-          uploadDate: DateFormatter.formatDate(new Date()).timestamp
-        };
+    try {
+      const plainDate = req.params.date;
+      const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
+      const { title } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ error: '标题不能为空' });
       }
-      return note;
-    });
-    
+
+      const notes = await readNoteData();
+      const noteExists = notes.some(note => note.date === formattedDate);
+      
+      if (!noteExists) {
+        return res.status(404).json({ error: '笔记不存在' });
+      }
+
+      const updatedNotes = notes.map(note => {
+        if (note.date === formattedDate) {
+          return {
+            ...note,
+            title,
+            uploadDate: DateFormatter.formatDate(new Date()).timestamp
+          };
+        }
+        return note;
+      });
+      
       await saveNoteData(updatedNotes);
-      res.json({ success: true });
+      res.json({ 
+        success: true,
+        csrfToken: req.csrfToken() 
+      });
     } catch (error) {
       next(error);
     }

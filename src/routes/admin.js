@@ -33,11 +33,7 @@ router.get('/logout', (req, res) => {
 router.get('/', requireAuth, noteController.getDashboard);
 router.get('/:date', requireAuth, noteController.getNote);
 router.post('/notes', requireAuth, noteController.createNote);
-router.post('/:date/upload', requireAuth, upload.array('images'), imageController.uploadImages);
-router.post('/:date/restore', requireAuth, imageController.restoreImages);
-router.post('/:date/reorder', requireAuth, imageController.updateImageOrder);  // Changed from PUT to POST
-router.delete('/:date/images/:image', requireAuth, imageController.deleteImage);
-router.post('/:date/update', requireAuth, (req, res, next) => {
+router.post('/:date/update', requireAuth, express.json(), (req, res, next) => {
   if (req.body._method === 'PUT') {
     return noteController.updateNote(req, res, next);
   }
@@ -47,7 +43,20 @@ router.post('/:date/update', requireAuth, (req, res, next) => {
 // Image routes
 router.get('/:date/images', requireAuth, imageController.getImages);
 router.post('/:date/images', requireAuth, upload.array('images'), imageController.uploadImages);
-router.put('/:date/images/order', requireAuth, imageController.updateImageOrder);
+router.put('/:date/images/order', requireAuth, express.json(), async (req, res, next) => {
+  try {
+    await imageController.updateImageOrder(req, res, next);
+    // 确保返回新的 CSRF token
+    res.json({ 
+      success: true,
+      message: '更新顺序成功',
+      csrfToken: req.csrfToken()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 router.delete('/:date/images/:image', requireAuth, imageController.deleteImage);
+router.post('/:date/restore', requireAuth, express.json(), imageController.restoreImages);
 
 module.exports = router;
