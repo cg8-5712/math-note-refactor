@@ -1,8 +1,9 @@
 const express = require('express');
-const path = require('path');
-const helmet = require('helmet');
 const session = require('express-session');
 const csrf = require('csurf');
+const helmet = require('helmet');
+const flash = require('connect-flash');
+const path = require('path');
 const config = require('./config');
 
 const configureExpress = (app) => {
@@ -28,41 +29,34 @@ const configureExpress = (app) => {
     }
   }));
 
-  // Session configuration - Must come before CSRF
+  // Session configuration
   app.use(session({
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
+    name: 'sessionId',
     cookie: {
-      ...config.session.cookie,
-      secure: process.env.NODE_ENV === 'production'
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));
 
+  // Flash messages
+  app.use(flash());
+
   // CSRF Protection
-  const csrfProtection = csrf({
-    cookie: false
-  });
+  app.use(csrf());
 
-  app.use(csrfProtection);
-
-  // Add CSRF token to responses
+  // Add CSRF token and auth status to response locals
   app.use((req, res, next) => {
-    // Store token in res.locals for views
     res.locals.csrfToken = req.csrfToken();
-
-    // Wrap json method to include token
-    const originalJson = res.json;
-    res.json = function(data) {
-      return originalJson.call(this, {
-        ...data,
-        csrfToken: req.csrfToken()
-      });
-    };
-
+    res.locals.isAuthenticated = req.session.isAuthenticated || false;
     next();
   });
 
   return app;
 };
+
 module.exports = configureExpress;

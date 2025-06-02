@@ -1,10 +1,17 @@
-const adminConfig = require('../config/admin');
-
 function requireAuth(req, res, next) {
   if (req.session && req.session.isAuthenticated) {
     return next();
   }
+  // 保存原始请求URL
+  req.session.returnTo = req.originalUrl;
   res.redirect('/admin/login');
 }
 
-module.exports = { requireAuth };
+function allowUnauth(req, res, next) {
+  if (req.session && req.session.isAuthenticated) {
+    return res.redirect('/admin');
+  }
+  next();
+}
+
+module.exports = { requireAuth, allowUnauth };

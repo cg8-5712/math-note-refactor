@@ -5,15 +5,16 @@
   "main": "app.js",
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www",
+    "dev": "cross-env DEBUG=math_note:* nodemon ./bin/www",
+    "debug": "nodemon --inspect ./bin/www",
     "test": "jest",
     "lint": "eslint src/**/*.js",
-    "debuglog": "DEBUG=math-note:* node ./bin/www"
+    "debuglog": "cross-env DEBUG=math-note:* node ./bin/www"
   },
   "dependencies": {
     "connect-flash": "^0.1.1",
     "csurf": "^1.11.0",
-    "debug": "^4.3.4",
+    "debug": "^4.4.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "globals": "^16.1.0",
     "jest": "^29.4.3",

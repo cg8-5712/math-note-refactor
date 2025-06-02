@@ -1,56 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const multer = require('../config/multer');
+const { validateDate, validateTitle, validateFile } = require('../middleware/validation');
 const noteController = require('../controllers/noteController');
 const imageController = require('../controllers/imageController');
-const adminConfig = require('../config/admin');
-const upload = require('../config/multer');
+const authController = require('../controllers/authController');
+const { requireAuth } = require('../middleware/auth');
 
-// Authentication routes
-router.get('/login', (req, res) => {
-  res.render('admin/login', { title: '管理员登录' });
-});
+// 登录相关路由 - 这些路由不需要认证
+router.get('/login', authController.showLoginForm);
+router.post('/login', authController.login);
+router.get('/logout', authController.logout);
 
-router.post('/login', (req, res) => {
-  const { password } = req.body;
-  if (adminConfig.verifyPassword(password)) {
-    req.session.isAuthenticated = true;
-    res.redirect('/admin');
-  } else {
-    res.render('admin/login', { 
-      title: '管理员登录',
-      error: '密码错误'
-    });
-  }
-});
+// 需要认证的路由
+router.use(requireAuth);
 
-router.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin/login');
-});
+// Dashboard routes
+router.get('/', noteController.getDashboard);
+router.post('/new', validateTitle, noteController.createNote);
 
 // Note routes
-router.get('/', requireAuth, noteController.getDashboard);
-router.get('/:date', requireAuth, noteController.getNote);
-router.post('/notes', requireAuth, noteController.createNote);
-router.post('/:date/update', requireAuth, express.json(), (req, res, next) => {
-  if (req.body._method === 'PUT') {
-    return noteController.updateNote(req, res, next);
-  }
-  next();
-});
+router.get('/:date', validateDate, noteController.getNote);
+router.post('/:date', 
+  validateDate,
+  validateTitle, 
+  multer.array('images', 10),  // Add multer to handle potential image uploads
+  noteController.updateNote
+);
+router.delete('/:date', validateDate, noteController.deleteNote);
 
 // Image routes
-router.get('/:date/images', requireAuth, imageController.getImages);
-router.post('/:date/images', requireAuth, upload.array('images'), imageController.uploadImages);
-router.put('/:date/images/order', requireAuth, express.json(), async (req, res, next) => {
-  try {
-    await imageController.updateImageOrder(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-});
-router.delete('/:date/images/:image', requireAuth, imageController.deleteImage);
-router.post('/:date/restore', requireAuth, express.json(), imageController.restoreImages);
+router.get('/:date/images', validateDate, imageController.getImages);
+router.delete('/:date/images/:image', validateDate, imageController.deleteImage);
 
 module.exports = router;

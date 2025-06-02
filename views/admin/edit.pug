@@ -6,37 +6,63 @@ block content
       a.back-btn(href="/admin") < 返回管理面板
       h1.page-title 编辑笔记
     
-    .note-info
-      p 日期: #{note.date}
-      p 标题: #{note.title}
-    
-    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}/update`)
+    form#editForm.edit-form(method="POST" action=`/admin/${note.plainDate}`)
       input(type="hidden" name="_csrf" value=csrfToken)
       input(type="hidden" name="_method" value="PUT")
+      
       .form-group
         label(for="title") 标题
-        input#title(type="text" name="title" value=note.title required)
+        input#title(
+          type="text" 
+          name="title" 
+          value=note.title 
+          required
+          minlength="1"
+          maxlength="100"
+          placeholder="请输入笔记标题"
+        )
       
       .form-actions
-        button.btn.save-btn(type="submit") 保存修改
-        a.btn.cancel-btn(href="#" data-action="cancel") 取消
+        button.btn.save-btn(type="submit" disabled) 保存修改
+        a.btn.cancel-btn(href="/admin" data-action="cancel") 取消
       
       .image-section
         h2 图片管理
         .image-upload
-          input#imageUpload(type="file" name="images" multiple accept="image/*")
+          input#imageUpload(
+            type="file" 
+            name="images" 
+            multiple 
+            accept=".jpg,.jpeg,.png,.gif"
+            data-max-size="15728640"
+          )
           label.btn(for="imageUpload") 上传新图片
         
-        - const imageDir = `/images/${note.plainDate}`
-        - const images = note.images || []
-        #sortableImages.image-grid(data-original-images=JSON.stringify(images))
-          if images.length
-            each image in images
+        #sortableImages.image-grid(
+          data-original-images=JSON.stringify(note.images || [])
+        )
+          if note.images && note.images.length
+            each image in note.images
               .image-item
-                img.image-thumbnail(src=`${imageDir}/${image}` alt="板书图片")
-                button.delete-image(type="button" data-filename=image) ×
+                img.image-thumbnail(
+                  src=`/images/${note.plainDate}/${image}` 
+                  alt="板书图片"  
+                  data-filename=image
+                )
+                button.delete-image(
+                  type="button" 
+                  data-filename=image
+                ) ×
           else
             .no-images 暂无图片
+        
+        .save-status(style="display: none;")
+          .spinner
+          span.status-text 正在保存...
+
+        .upload-progress(style="display: none;")
+          .progress-bar
+          .progress-text     
 
 block scripts
   script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js")
