@@ -24,10 +24,21 @@ const configureExpress = (app) => {
         scriptSrc: ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'"]
+        connectSrc: ["'self'"],
+        upgradeInsecureRequests: null // Remove this in development
       }
     }
   }));
+
+  // Add additional headers for development
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token');
+      next();
+    });
+  }
 
   // Session configuration
   app.use(session({
@@ -47,12 +58,17 @@ const configureExpress = (app) => {
   app.use(flash());
 
   // CSRF Protection
-  app.use(csrf());
+  app.use(csrf({
+    cookie: false
+  }));
 
-  // Add CSRF token and auth status to response locals
+  // Add CSRF token to response locals and set security headers
   app.use((req, res, next) => {
     res.locals.csrfToken = req.csrfToken();
     res.locals.isAuthenticated = req.session.isAuthenticated || false;
+    
+    // Add CSRF token to response headers for XHR requests
+    res.set('X-CSRF-Token', req.csrfToken());
     next();
   });
 

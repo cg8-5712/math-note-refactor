@@ -24,22 +24,20 @@ const validateDate = (req, res, next) => {
 };
 
 const validateTitle = (req, res, next) => {
+  console.log('validateTitle req.body:', req.body); // 调试用
   const { title } = req.body;
-  
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return res.status(400).json({
       error: '标题不能为空',
       code: 'INVALID_TITLE'
     });
   }
-
   if (title.length > 100) {
     return res.status(400).json({
       error: '标题不能超过100个字符',
       code: 'TITLE_TOO_LONG'
     });
   }
-
   next();
 };
 

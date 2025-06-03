@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // API request handler
-  // Update makeAuthenticatedRequest to handle FormData correctly
   const makeAuthenticatedRequest = async (url, options = {}) => {
     try {
       const requestUrl = url.startsWith('http') 
@@ -212,34 +211,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Form submission handler
+  // Page unload handler
+  let unloadHandler = function(e) {
+    if (hasChanges) {
+      e.preventDefault();
+      e.returnValue = '您有未保存的更改，确定要离开吗？';
+    }
+  };
+  window.addEventListener('beforeunload', unloadHandler);
+
   // Form submission handler
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
+      // 保存时移除 beforeunload，防止弹窗
+      window.removeEventListener('beforeunload', unloadHandler);
+
       const titleInput = form.querySelector('#title');
       const title = titleInput?.value?.trim();
-      
-      console.log('Submit form with title:', title);  // Debug log
 
       if (!title) {
-        console.error('Title is empty');  // Debug log
         alert('标题不能为空');
         titleInput?.focus();
+        // 恢复 beforeunload
+        window.addEventListener('beforeunload', unloadHandler);
         return;
       }
-      
+
       try {
         const formData = new FormData();
-        
-        // 添加基本数据
         formData.append('title', title);
         formData.append('_csrf', csrfToken);
-        
-        // 添加 method override
         formData.append('_method', 'PUT');
-        
+
         // 处理待删除的图片
         if (currentState.pendingDeletes.length > 0) {
           for (const filename of currentState.pendingDeletes) {
@@ -276,12 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 发送请求
-        console.log('Sending form data:', {
-          title,
-          imageOrder: currentImages,
-          csrf: csrfToken
-        });
-
         const response = await makeAuthenticatedRequest(window.location.pathname, {
           method: 'POST',
           body: formData
@@ -292,27 +291,25 @@ document.addEventListener('DOMContentLoaded', function() {
             saveStatus.querySelector('.status-text').textContent = '保存成功';
             setTimeout(() => {
               saveStatus.style.display = 'none';
-            }, 1000);
+              window.location.href = '/admin';
+            }, 500);
+          } else {
+            window.location.href = '/admin';
           }
-          window.location.href = '/admin';
         } else {
           throw new Error(response.error || '保存失败');
         }
       } catch (error) {
+        // 保存失败时恢复 beforeunload
+        window.addEventListener('beforeunload', unloadHandler);
         console.error('Save failed:', error);
-        console.error('Error details:', {
-          message: error.message,
-          stack: error.stack,
-          response: error.response
-        });
-        
+        alert(error.message || '保存失败，请重试');
         if (saveStatus) {
           saveStatus.querySelector('.status-text').textContent = '保存失败';
           setTimeout(() => {
             saveStatus.style.display = 'none';
           }, 3000);
         }
-        alert(error.message || '保存失败，请重试');
       }
     });
   }
@@ -322,20 +319,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (cancelBtn) {
     cancelBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      
       if (!hasChanges || confirm('确定要取消编辑吗？所有更改将会丢失')) {
         window.location.href = '/admin';
       }
     });
   }
-
-  // Page unload handler
-  window.addEventListener('beforeunload', (e) => {
-    if (hasChanges) {
-      e.preventDefault();
-      e.returnValue = '您有未保存的更改，确定要离开吗？';
-    }
-  });
 
   // Network status handlers
   window.addEventListener('online', () => {
@@ -348,6 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
     alert('网络连接已断开，请保存您的更改');
   });
 
-  // Initialize the state
+  // 初始化
   initializeState();
 });

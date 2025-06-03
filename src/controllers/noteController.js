@@ -60,13 +60,40 @@ class NoteController {
       const dateInfo = DateFormatter.formatDate(new Date());
       const fullDate = DateFormatter.convertToFullDate(date);
       
-      await fsPromises.appendFile(
-        path.join(__dirname, '../../data/index.txt'),
-        `${fullDate}|${title}|${dateInfo.timestamp}\n`,
-        'utf8'
-      );
-      res.redirect('/admin');
+      // Validate date
+      if (!DateFormatter.isValidDate(date)) {
+        return res.status(400).json({
+          error: '无效的日期格式',
+          code: 'INVALID_DATE_FORMAT'
+        });
+      }
+
+      const notes = await readNoteData();
+      
+      // Check if note already exists
+      if (notes.some(note => note.date === fullDate)) {
+        return res.status(400).json({
+          error: '该日期的笔记已存在',
+          code: 'NOTE_EXISTS'
+        });
+      }
+
+      // Add new note
+      notes.push({
+        date: fullDate,
+        title,
+        uploadDate: dateInfo.timestamp
+      });
+
+      await saveNoteData(notes);
+      
+      // Return success response
+      return res.json({ 
+        success: true,
+        message: '创建成功'
+      });
     } catch (error) {
+      console.error('Create note error:', error);
       next(error);
     }
   }
@@ -75,8 +102,8 @@ class NoteController {
     try {
       const plainDate = req.params.date;
       const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
-      
-      console.log('\n==================================');
+
+      process.stdout.write('\n==================================');
       console.log('Update Note Request Information:');
       console.log('==================================');
       console.log('Request Body:', req.body);

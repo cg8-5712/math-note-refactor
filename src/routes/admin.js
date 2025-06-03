@@ -23,8 +23,8 @@ router.post('/new', validateTitle, noteController.createNote);
 router.get('/:date', validateDate, noteController.getNote);
 router.post('/:date', 
   validateDate,
-  validateTitle, 
   multer.array('images', 10),  // Add multer to handle potential image uploads
+  validateTitle, 
   noteController.updateNote
 );
 router.delete('/:date', validateDate, noteController.deleteNote);
