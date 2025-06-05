@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const adminConfig = {
   // Password: "admin123" (you should change this)

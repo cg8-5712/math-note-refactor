@@ -1,7 +1,7 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs').promises;
-const config = require('./config');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import config from './config';
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {

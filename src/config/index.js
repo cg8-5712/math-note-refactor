@@ -1,5 +1,5 @@
-const path = require('path');
-const config = require('./config');
+import path from 'path';
+import config from './config';
 
 // 导出配置，优先使用环境变量
 module.exports = {

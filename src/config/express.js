@@ -1,10 +1,10 @@
-const express = require('express');
-const session = require('express-session');
-const csrf = require('csurf');
-const helmet = require('helmet');
-const flash = require('connect-flash');
-const path = require('path');
-const config = require('./config');
+import express from 'express';
+import session from 'express-session';
+import csrf from 'csurf';
+import helmet from 'helmet';
+import flash from 'connect-flash';
+import path from 'path';
+import config from './config';
 
 const configureExpress = (app) => {
   // Basic middleware

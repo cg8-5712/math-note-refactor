@@ -1,4 +1,4 @@
-const path = require('path');
+import path from 'path';
 
 const config = {
   env: process.env.NODE_ENV || 'development',
