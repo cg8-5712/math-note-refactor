@@ -4,7 +4,12 @@ import csrf from 'csurf';
 import helmet from 'helmet';
 import flash from 'connect-flash';
 import path from 'path';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import config from './config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const configureExpress = (app) => {
   // Basic middleware
