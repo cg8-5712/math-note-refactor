@@ -7,4 +7,4 @@ function requireAuth(req, res, next) {
   res.redirect('/admin/login');
 }
 
-export { requireAuth };
+export default requireAuth;
