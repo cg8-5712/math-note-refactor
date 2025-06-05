@@ -7,7 +7,7 @@ import authController from '../controllers/authController.js';
 import requireAuth from '../middleware/auth.js';  // Changed to named import
 
 const router = express.Router();
-const { validateDate, validateTitle, validateFile } = validation;
+const { validateDate, validateTitle } = validation;
 
 // 登录相关路由 - 这些路由不需要认证
 router.get('/login', authController.showLoginForm);

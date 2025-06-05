@@ -11,9 +11,12 @@ import config from './config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const NODE_ENV = typeof process !== 'undefined' && process.env && process.env.NODE_ENV
-    ? process.env.NODE_ENV
-    : 'development';
+// 定义环境相关常量
+const ENV = {
+  MODE: import.meta.env?.MODE || 'development',
+  PROD: import.meta.env?.PROD || false,
+  DEV: import.meta.env?.DEV || true
+};
 
 const configureExpress = (app) => {
   // Basic middleware
@@ -34,13 +37,13 @@ const configureExpress = (app) => {
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
         connectSrc: ["'self'"],
-        upgradeInsecureRequests: null // Remove this in development
+        upgradeInsecureRequests: ENV.PROD ? [] : null
       }
     }
   }));
 
   // Add additional headers for development
-  if (NODE_ENV !== 'production') {
+  if (!ENV.PROD) {
     app.use((req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -57,7 +60,7 @@ const configureExpress = (app) => {
     name: 'sessionId',
     cookie: {
       httpOnly: true,
-      secure: NODE_ENV === 'production',
+      secure: ENV.PROD,
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
@@ -75,8 +78,6 @@ const configureExpress = (app) => {
   app.use((req, res, next) => {
     res.locals.csrfToken = req.csrfToken();
     res.locals.isAuthenticated = req.session.isAuthenticated || false;
-    
-    // Add CSRF token to response headers for XHR requests
     res.set('X-CSRF-Token', req.csrfToken());
     next();
   });

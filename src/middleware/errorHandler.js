@@ -1,4 +1,4 @@
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
   console.error(err.stack);
   
   if (err.code === 'LIMIT_FILE_SIZE') {
