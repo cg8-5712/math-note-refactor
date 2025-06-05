@@ -246,40 +246,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let triedRefresh = false;
 
+      // 处理图片删除
+      const handleImageDeletions = async () => {
+        if (currentState.pendingDeletes.length === 0) return;
+
+        for (const filename of currentState.pendingDeletes) {
+          try {
+            await makeAuthenticatedRequest(
+                `${window.location.pathname}/images/${filename}`,
+                { method: 'DELETE' }
+            );
+          } catch (error) {
+            console.error(`Failed to delete image ${filename}:`, error);
+          }
+        }
+      };
+
+      // 准备表单数据
+      const prepareFormData = (title) => {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('_csrf', csrfToken);
+        formData.append('_method', 'PUT');
+
+        // 添加待上传的图片
+        currentState.pendingUploads.forEach(({file}) => {
+          formData.append('images', file);
+        });
+
+        // 添加图片顺序
+        const currentImages = Array.from(
+            document.querySelectorAll('.image-item img')
+        ).map(img => img.dataset.filename)
+            .filter(filename => !currentState.pendingDeletes.includes(filename));
+        formData.append('imageOrder', JSON.stringify(currentImages));
+
+        return formData;
+      };
+
       const doSave = async () => {
         try {
-          const formData = new FormData();
-          formData.append('title', title);
-          formData.append('_csrf', csrfToken);
-          formData.append('_method', 'PUT');
-
-          // 处理待删除的图片
-          if (currentState.pendingDeletes.length > 0) {
-            for (const filename of currentState.pendingDeletes) {
-              try {
-                await makeAuthenticatedRequest(
-                  `${window.location.pathname}/images/${filename}`,
-                  { method: 'DELETE' }
-                );
-              } catch (error) {
-                console.error(`Failed to delete image ${filename}:`, error);
-              }
-            }
-          }
-
-          // 添加待上传的图片
-          if (currentState.pendingUploads.length > 0) {
-            currentState.pendingUploads.forEach(({file}) => {
-              formData.append('images', file);
-            });
-          }
-
-          // 添加图片顺序
-          const currentImages = Array.from(
-            document.querySelectorAll('.image-item img')
-          ).map(img => img.dataset.filename)
-            .filter(filename => !currentState.pendingDeletes.includes(filename));
-          formData.append('imageOrder', JSON.stringify(currentImages));
+          await handleImageDeletions();
+          const formData = prepareFormData(title);
 
           if (saveStatus) {
             saveStatus.style.display = 'flex';
@@ -291,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData
           });
 
-          if (response && response.success) {
+          if (response?.success) {
             if (saveStatus) {
               saveStatus.querySelector('.status-text').textContent = '保存成功';
               setTimeout(() => {
@@ -305,36 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             throw new Error(response?.error || '保存失败');
           }
         } catch (error) {
-          // 如果是 CSRF 失效，刷新 token 并重试一次
-          if (error.message === 'CSRF_EXPIRED' && !triedRefresh) {
-            triedRefresh = true;
-            // 获取新 token（通过 GET 当前页面）
-            try {
-              const resp = await fetch(window.location.pathname, { credentials: 'same-origin' });
-              const html = await resp.text();
-              // 从 meta 或 input 重新获取 token
-              const match = html.match(/name="_csrf" value="([^"]+)"/) || html.match(/name="csrf-token" content="([^"]+)"/);
-              if (match) {
-                csrfToken = match[1];
-                if (csrfInput) csrfInput.value = csrfToken;
-                return doSave();
-              }
-            } catch (e) {}
-          }
-          // 如果未登录，跳转登录页
-          if (error.message === 'NOT_AUTHENTICATED') {
-            alert('登录已过期，请重新登录');
-            window.location.href = '/admin/login';
-            return;
-          }
-          window.addEventListener('beforeunload', unloadHandler);
-          alert(error.message || '保存失败，请重试');
-          if (saveStatus) {
-            saveStatus.querySelector('.status-text').textContent = '保存失败';
-            setTimeout(() => {
-              saveStatus.style.display = 'none';
-            }, 3000);
-          }
+          handleSaveError(error);
         }
       };
 
