@@ -1,7 +1,7 @@
-const path = require('path');
-const fsPromises = require('fs').promises;
-const { readNoteData, saveNoteData } = require('../utils/noteData');
-const DateFormatter = require('../utils/dateFormatter');
+import path from "path";
+import fsPromises from "fs/promises";
+import { readNoteData, saveNoteData } from "../utils/noteData.js";
+import DateFormatter from "../utils/dateFormatter.js";
 
 class NoteController {
   async getDashboard(req, res, next) {
@@ -267,4 +267,4 @@ class NoteController {
   }
 }
 
-module.exports = new NoteController();
+export default new NoteController();

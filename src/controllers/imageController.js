@@ -1,5 +1,5 @@
-const path = require('path');
-const fsPromises = require('fs').promises;
+import path from 'path';
+import fsPromises from 'fs/promises';
 
 class ImageController {
   async getImages(req, res, next) {
@@ -137,4 +137,4 @@ class ImageController {
   }
 }
 
-module.exports = new ImageController();
+export default new ImageController();

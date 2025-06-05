@@ -1,4 +1,4 @@
-const adminConfig = require('../config/admin');
+import adminConfig from "../config/admin.js";
 
 class AuthController {
   showLoginForm(req, res) {
@@ -30,4 +30,4 @@ class AuthController {
   }
 }
 
-module.exports = new AuthController();
+export default new AuthController();
