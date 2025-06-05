@@ -5,11 +5,18 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// 定义环境相关常量
+const ENV = {
+  MODE: import.meta.env?.MODE || 'development',
+  PROD: import.meta.env?.PROD || false,
+  DEV: import.meta.env?.DEV || true
+};
+
 const config = {
-  env: process.env.NODE_ENV || 'development',
-  port: process.env.PORT || 3000,
-  sessionSecret: process.env.SESSION_SECRET || 'your-secret-key',
-  
+  env: ENV.MODE,
+  port: import.meta.env?.PORT || 3000,
+  sessionSecret: import.meta.env?.SESSION_SECRET || 'your-secret-key',
+
   paths: {
     root: path.resolve(__dirname, '../..'),
     public: path.resolve(__dirname, '../../public'),
@@ -27,7 +34,7 @@ const config = {
   session: {
     cookie: {
       maxAge: 3600000, // 1 hour
-      secure: process.env.NODE_ENV === 'production',
+      secure: ENV.PROD,
       httpOnly: true,
       sameSite: 'strict'
     }
