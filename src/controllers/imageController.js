@@ -30,6 +30,7 @@ class ImageController {
         } catch (err) {
           // If order.json doesn't exist, use alphabetical order
           console.warn('Order file not found:', orderPath);
+          console.error('Falling back to alphabetical order', err);
           order = [...images].sort();
         }
       } catch (err) {
@@ -119,10 +120,10 @@ class ImageController {
         console.error('Invalid image order:', images);
         return res.status(400).json({
           error: '部分图片不存在',
+          details: err.message,
           code: 'IMAGES_NOT_FOUND'
         });
       }
-
       // Write order file atomically
       await fsPromises.mkdir(path.dirname(orderPath), { recursive: true });
       await fsPromises.writeFile(tempPath, JSON.stringify(images, null, 2));
