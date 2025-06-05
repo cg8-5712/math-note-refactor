@@ -1,21 +1,17 @@
 import path from 'path';
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 定义环境相关常量
-const ENV = {
-  MODE: import.meta.env?.MODE || 'development',
-  PROD: import.meta.env?.PROD || false,
-  DEV: import.meta.env?.DEV || true
-};
-
 const config = {
-  env: ENV.MODE,
-  port: import.meta.env?.PORT || 3000,
-  sessionSecret: import.meta.env?.SESSION_SECRET || 'your-secret-key',
+  env: process.env.NODE_ENV || 'development',
+  port: process.env.PORT || 3000,
+  sessionSecret: process.env.SESSION_SECRET || 'your-secret-key',
 
   paths: {
     root: path.resolve(__dirname, '../..'),
@@ -34,7 +30,7 @@ const config = {
   session: {
     cookie: {
       maxAge: 3600000, // 1 hour
-      secure: ENV.PROD,
+      secure: process.env.NODE_ENV,
       httpOnly: true,
       sameSite: 'strict'
     }
