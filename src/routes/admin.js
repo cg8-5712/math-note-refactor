@@ -1,11 +1,14 @@
-const express = require('express');
+import express from 'express';
+import multer from '../config/multer.js';
+import validation from '../middleware/validation.js';
+import noteController from '../controllers/noteController.js';
+import imageController from '../controllers/imageController.js';
+import authController from '../controllers/authController.js';
+import auth from '../middleware/auth.js';
+
 const router = express.Router();
-const multer = require('../config/multer');
-const { validateDate, validateTitle, validateFile } = require('../middleware/validation');
-const noteController = require('../controllers/noteController');
-const imageController = require('../controllers/imageController');
-const authController = require('../controllers/authController');
-const { requireAuth } = require('../middleware/auth');
+const { validateDate, validateTitle, validateFile } = validation;
+const { requireAuth } = auth;
 
 // 登录相关路由 - 这些路由不需要认证
 router.get('/login', authController.showLoginForm);
@@ -33,4 +36,4 @@ router.delete('/:date', validateDate, noteController.deleteNote);
 router.get('/:date/images', validateDate, imageController.getImages);
 router.delete('/:date/images/:image', validateDate, imageController.deleteImage);
 
-module.exports = router;
+export default router;

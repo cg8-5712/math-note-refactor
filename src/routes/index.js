@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { readNoteData } from '../utils/noteData.js';
+
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-const { readNoteData } = require('../utils/noteData');
 
 // 首页路由
 router.get('/', async (req, res, next) => {
@@ -73,4 +74,4 @@ router.get('/notes/:date', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;
