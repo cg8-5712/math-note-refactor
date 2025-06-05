@@ -1,9 +1,13 @@
 import express from 'express';
 import path from 'path';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import fs from 'fs';
 import { readNoteData } from '../utils/noteData.js';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // 首页路由
 router.get('/', async (req, res, next) => {
