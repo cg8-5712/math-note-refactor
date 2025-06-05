@@ -1,6 +1,8 @@
-const express = require('express');
-const configureExpress = require('./src/config/express');
-const errorHandler = require('./src/middleware/errorHandler');
+import express from 'express';
+import configureExpress from './src/config/express.js';
+import errorHandler from './src/middleware/errorHandler.js';
+import indexRoutes from './src/routes/index.js';
+import adminRoutes from './src/routes/admin.js';
 
 // Initialize app
 const app = express();
@@ -9,10 +11,10 @@ const app = express();
 configureExpress(app);
 
 // Routes
-app.use('/', require('./src/routes/index'));
-app.use('/admin', require('./src/routes/admin'));
+app.use('/', indexRoutes);
+app.use('/admin', adminRoutes);
 
 // Error handling
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

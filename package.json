@@ -1,6 +1,7 @@
 {
   "name": "math-note",
-  "version": "1.0.0",
+  "version": "1.7.1",
+  "type": "module",
   "description": "Math classroom notes management system",
   "main": "app.js",
   "scripts": {
