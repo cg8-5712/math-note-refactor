@@ -52,7 +52,7 @@ const validateFile = (req, res, next) => {
   next();
 };
 
-export default {
+export {
   validateDate,
   validateTitle,
   validateFile

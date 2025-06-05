@@ -1,5 +1,5 @@
-const fs = require('fs').promises;
-const path = require('path');
+import fs from 'fs/promises';
+import path from 'path';
 
 const INDEX_FILE = path.join(__dirname, '../../data/index.txt');
 
@@ -36,7 +36,7 @@ async function saveNoteData(notes) {
   }
 }
 
-module.exports = {
+export {
   readNoteData,
   saveNoteData
 };
