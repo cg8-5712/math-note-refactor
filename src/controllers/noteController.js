@@ -1,7 +1,9 @@
-import path from "path";
+import { dirname path } from "path";
 import fsPromises from "fs/promises";
 import { readNoteData, saveNoteData } from "../utils/noteData.js";
 import DateFormatter from "../utils/dateFormatter.js";
+
+const __dirname = dirname(__filename);
 
 class NoteController {
   async getDashboard(req, res, next) {
@@ -126,7 +128,7 @@ class NoteController {
       const plainDate = req.params.date;
       const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
 
-      process.stdout.write('\n==================================');
+      console.log('\n==================================');
       console.log('Update Note Request Information:');
       console.log('==================================');
       console.log('Request Body:', req.body);
