@@ -2,32 +2,58 @@ extends ../layout
 
 block content
   .container
-    h1.page-title 管理面板
-    a.logout-btn(href="/admin/logout") 退出
+    .dashboard-header
+      h1.page-title 管理面板
+      a.logout-btn(href="/admin/logout" title="退出登录") 
+        span 退出
     .admin-controls
       form#newNoteForm(method="POST" action="/admin/new")
-        input(type="text" name="date" placeholder="日期 (MMDD)" required pattern="(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])")
-        input(type="text" name="title" placeholder="标题" required)
-        button(type="submit") 添加新记录
+        input(type="text" 
+          name="date" 
+          placeholder="日期 (MMDD)" 
+          required 
+          pattern="(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])"
+          title="请输入正确的日期格式，如：0526"
+        )
+        input(type="text" 
+          name="title" 
+          placeholder="标题" 
+          required
+          maxlength="100"
+          title="请输入笔记标题"
+        )
+        button(type="submit" title="创建新笔记") 添加新记录
     
-    table.table
-      thead.thead-light
-        tr
-          th 日期
-          th 标题
-          th 修改时间
-          th 操作
-      tbody
-        each note in notes
-          tr(data-date=note.date)
-            td= note.date
-            td
-              span.note-title= note.title
-              input.edit-title(type="text" value=note.title style="display: none;")
-            td= note.uploadDate
-            td
-              a.edit-btn(href=`/admin/${note.date.replace(/\./g, '')}`) 编辑
-              button.delete-btn(onclick=`deleteNote('${note.date.replace(/\./g, '')}')`) 删除
+    .table-responsive
+      table.table
+        thead.thead-light
+          tr
+            th 日期
+            th 标题
+            th.upload-date 修改时间
+            th.text-center 操作
+        tbody
+          each note in notes
+            tr(data-date=note.date)
+              td= note.date
+              td
+                span.note-title= note.title
+                input.edit-title(
+                  type="text" 
+                  value=note.title 
+                  style="display: none;"
+                  maxlength="100"
+                )
+              td.upload-date= note.uploadDate
+              td.text-center
+                a.edit-btn(
+                  href=`/admin/${note.date.replace(/\./g, '')}` 
+                  title="编辑笔记"
+                ) 编辑
+                button.delete-btn(
+                  onclick=`deleteNote('${note.date.replace(/\./g, '')}')` 
+                  title="删除笔记"
+                ) 删除
 
 block scripts
   script(src="/javascripts/dashboard.js")
