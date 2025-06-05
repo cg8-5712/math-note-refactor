@@ -1,4 +1,4 @@
-import { dirname path } from "path";
+import { path, dirname } from "path";
 import fsPromises from "fs/promises";
 import { readNoteData, saveNoteData } from "../utils/noteData.js";
 import DateFormatter from "../utils/dateFormatter.js";
