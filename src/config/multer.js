@@ -1,7 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
-import config from './config';
+import config from './config.js';
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -37,4 +37,4 @@ const upload = multer({
   }
 });
 
-module.exports = upload;
+export default upload;

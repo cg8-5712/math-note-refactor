@@ -3,7 +3,7 @@
 import app from '../app.js';
 import debug from 'debug';
 import http from 'http';
-import config from '../config/config.js';
+import config from '../src/config/config.js';
 
 const debugServer = debug('math-note:server');
 

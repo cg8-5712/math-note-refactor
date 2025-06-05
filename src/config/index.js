@@ -1,8 +1,6 @@
-import path from 'path';
-import config from './config';
+import config from './config.js';
 
-// 导出配置，优先使用环境变量
-module.exports = {
+export default {
   ...config,
   env: process.env.NODE_ENV || config.env,
   port: process.env.PORT || config.port,

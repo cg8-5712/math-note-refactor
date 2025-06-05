@@ -9,4 +9,4 @@ const adminConfig = {
   }
 };
 
-module.exports = adminConfig;
+export default adminConfig;

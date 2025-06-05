@@ -4,7 +4,7 @@ import csrf from 'csurf';
 import helmet from 'helmet';
 import flash from 'connect-flash';
 import path from 'path';
-import config from './config';
+import config from './config.js';
 
 const configureExpress = (app) => {
   // Basic middleware
@@ -75,4 +75,4 @@ const configureExpress = (app) => {
   return app;
 };
 
-module.exports = configureExpress;
+export default configureExpress;
