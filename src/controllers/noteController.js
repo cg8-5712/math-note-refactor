@@ -1,8 +1,11 @@
-import { path, dirname } from "path";
+import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import fsPromises from "fs/promises";
 import { readNoteData, saveNoteData } from "../utils/noteData.js";
 import DateFormatter from "../utils/dateFormatter.js";
 
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 class NoteController {

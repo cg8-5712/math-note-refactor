@@ -1,6 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const INDEX_FILE = path.join(__dirname, '../../data/index.txt');
 
 async function readNoteData() {

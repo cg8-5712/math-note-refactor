@@ -1,4 +1,4 @@
-const DateFormatter = require('../utils/dateFormatter');
+import DateFormatter from '../utils/dateFormatter.js';
 
 const validateDate = (req, res, next) => {
   const { date } = req.params;
@@ -52,7 +52,7 @@ const validateFile = (req, res, next) => {
   next();
 };
 
-export {
+export default {
   validateDate,
   validateTitle,
   validateFile
