@@ -7,11 +7,4 @@ function requireAuth(req, res, next) {
   res.redirect('/admin/login');
 }
 
-function allowUnauth(req, res, next) {
-  if (req.session && req.session.isAuthenticated) {
-    return res.redirect('/admin');
-  }
-  next();
-}
-
-module.exports = { requireAuth, allowUnauth };
+module.exports = { requireAuth };
