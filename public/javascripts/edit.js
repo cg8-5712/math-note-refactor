@@ -89,27 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // Error handler
-  const handleSaveError = (error) => {
-    if (saveStatus) {
-      saveStatus.style.display = 'none';
-    }
-
-    switch (error.message) {
-      case 'NOT_AUTHENTICATED':
-        alert('登录已过期，请重新登录');
-        window.location.href = '/admin/login';
-        break;
-      case 'CSRF_EXPIRED':
-        alert('页面已过期，请刷新后重试');
-        window.location.reload();
-        break;
-      default:
-        alert(`保存失败: ${error.message}`);
-        window.addEventListener('beforeunload', unloadHandler);
-    }
-  };
-
   const response = await fetch(requestUrl, mergedOptions);
 
   // 检查是否重定向到登录页面
@@ -281,6 +260,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       };
 
+      // Error handler
+      const handleSaveError = (error) => {
+        if (saveStatus) {
+          saveStatus.style.display = 'none';
+        }
+
+        switch (error.message) {
+          case 'NOT_AUTHENTICATED':
+            alert('登录已过期，请重新登录');
+            window.location.href = '/admin/login';
+            break;
+          case 'CSRF_EXPIRED':
+            alert('页面已过期，请刷新后重试');
+            window.location.reload();
+            break;
+          default:
+            alert(`保存失败: ${error.message}`);
+            window.addEventListener('beforeunload', unloadHandler);
+        }
+      };
+
       // 准备表单数据
       const prepareFormData = (title) => {
         const formData = new FormData();
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       };
 
-      doSave();
+      await doSave();
     });
   }
 
