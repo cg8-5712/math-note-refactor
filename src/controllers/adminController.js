@@ -1,7 +1,12 @@
 import readNoteData from '../utils/noteData.js';
 import DateFormatter from '../utils/dateFormatter.js';
 import path from 'path';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import fsPromises from 'fs/promises';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class AdminController {
   async index(req, res, next) {
