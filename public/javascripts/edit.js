@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const imageUpload = document.getElementById('imageUpload');
   const csrfInput = document.querySelector('input[name="_csrf"]');
   const saveStatus = document.querySelector('.save-status');
-  const uploadProgress = document.querySelector('.upload-progress');
   
   // State management
   let csrfToken = csrfInput ? csrfInput.value : null;
@@ -65,65 +64,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // API request handler
   const makeAuthenticatedRequest = async (url, options = {}) => {
-    try {
-      const requestUrl = url.startsWith('http') 
-        ? url 
-        : `${window.location.protocol}//${window.location.host}${url}`;
+  const requestUrl = url.startsWith('http')
+    ? url
+    : `${window.location.protocol}//${window.location.host}${url}`;
 
-      const defaultOptions = {
-        credentials: 'same-origin',
-        headers: {
-          'X-CSRF-Token': csrfToken,
-          'Accept': 'application/json'
-        }
-      };
-
-      if (options.body instanceof FormData) {
-        delete defaultOptions.headers['Content-Type'];
-      }
-
-      const mergedOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-          ...defaultOptions.headers,
-          ...(options.headers || {})
-        }
-      };
-
-      const response = await fetch(requestUrl, mergedOptions);
-
-      // 检查是否重定向到登录页面
-      if (response.redirected && response.url.includes('/admin/login')) {
-        throw new Error('NOT_AUTHENTICATED');
-      }
-
-      const contentType = response.headers.get('content-type');
-      let data = null;
-
-      if (contentType?.includes('application/json')) {
-        data = await response.json();
-        if (data?.csrfToken) {
-          updateCsrfToken(data.csrfToken);
-        }
-      }
-
-      if (!response.ok) {
-        // 处理 CSRF 失效
-        if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
-          throw new Error('CSRF_EXPIRED');
-        }
-        // 处理未登录
-        if (response.status === 401 || response.status === 403 || data?.code === 'UNAUTHORIZED') {
-          throw new Error('NOT_AUTHENTICATED');
-        }
-        throw new Error(data?.error || '请求失败');
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
+  const defaultOptions = {
+    credentials: 'same-origin',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Accept': 'application/json'
     }
+  };
+
+  if (options.body instanceof FormData) {
+    delete defaultOptions.headers['Content-Type'];
+  }
+
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...(options.headers || {})
+    }
+  };
+
+  const response = await fetch(requestUrl, mergedOptions);
+
+  // 检查是否重定向到登录页面
+  if (response.redirected && response.url.includes('/admin/login')) {
+    throw new Error('NOT_AUTHENTICATED');
+  }
+
+  const contentType = response.headers.get('content-type');
+  let data = null;
+
+  if (contentType?.includes('application/json')) {
+    data = await response.json();
+    if (data?.csrfToken) {
+      updateCsrfToken(data.csrfToken);
+    }
+  }
+
+  if (!response.ok) {
+    // 处理 CSRF 失效
+    if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
+      throw new Error('CSRF_EXPIRED');
+    }
+    // 处理未登录
+    if (response.status === 401 || response.status === 403 || data?.code === 'UNAUTHORIZED') {
+      throw new Error('NOT_AUTHENTICATED');
+    }
+    throw new Error(data?.error || '请求失败');
+  }
+
+  return data;
   };
 
   // Image preview handler
