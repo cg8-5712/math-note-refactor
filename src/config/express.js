@@ -11,6 +11,10 @@ import config from './config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const NODE_ENV = typeof process !== 'undefined' && process.env && process.env.NODE_ENV
+    ? process.env.NODE_ENV
+    : 'development';
+
 const configureExpress = (app) => {
   // Basic middleware
   app.use(express.json());
@@ -36,7 +40,7 @@ const configureExpress = (app) => {
   }));
 
   // Add additional headers for development
-  if (process.env.NODE_ENV !== 'production') {
+  if (NODE_ENV !== 'production') {
     app.use((req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -53,7 +57,7 @@ const configureExpress = (app) => {
     name: 'sessionId',
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
