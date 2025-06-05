@@ -263,21 +263,32 @@ tr:hover {
   border: 2px dashed #3498db;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
+.form-inline {
+  display: flex;
+  align-items: center;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
+.form-inline .form-group {
+  display: flex;
+  flex-direction: row; /* 确保标签和输入框在一行 */
+  align-items: center;
+  margin-right: 10px; /* 可根据需要调整间距 */
 }
 
-.form-group input[type="text"] {
-  width: 100%;
+.form-inline .form-group label {
+  display: inline-block; /* 使标签成为行内块元素 */
+  margin-right: 5px; /* 调整标签和输入框之间的间距 */
+}
+
+.form-inline .form-group input[type="password"] {
+  width: auto; /* 确保输入框宽度自适应 */
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.form-inline .btn {
+  display: inline-block;
 }
 
 .form-actions {
