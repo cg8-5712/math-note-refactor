@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const imageUpload = document.getElementById('imageUpload');
   const csrfInput = document.querySelector('input[name="_csrf"]');
   const saveStatus = document.querySelector('.save-status');
-  
+
   // State management
   let csrfToken = csrfInput ? csrfInput.value : null;
   let hasChanges = false;
@@ -86,6 +86,27 @@ document.addEventListener('DOMContentLoaded', function() {
     headers: {
       ...defaultOptions.headers,
       ...(options.headers || {})
+    }
+  };
+
+  // Error handler
+  const handleSaveError = (error) => {
+    if (saveStatus) {
+      saveStatus.style.display = 'none';
+    }
+
+    switch (error.message) {
+      case 'NOT_AUTHENTICATED':
+        alert('登录已过期，请重新登录');
+        window.location.href = '/admin/login';
+        break;
+      case 'CSRF_EXPIRED':
+        alert('页面已过期，请刷新后重试');
+        window.location.reload();
+        break;
+      default:
+        alert(`保存失败: ${error.message}`);
+        window.addEventListener('beforeunload', unloadHandler);
     }
   };
 
@@ -243,8 +264,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('beforeunload', unloadHandler);
         return;
       }
-
-      let triedRefresh = false;
 
       // 处理图片删除
       const handleImageDeletions = async () => {
