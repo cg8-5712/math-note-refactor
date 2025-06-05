@@ -1,11 +1,10 @@
 #!/usr/bin/env node
+import http from 'http';
+import debug from 'debug';
+import process from 'process';
 
 import app from '../app.js';
-import debug from 'debug';
-import http from 'http';
 import config from '../src/config/config.js';
-
-const debugServer = debug('math-note:server');
 
 // Normalize port
 const port = normalizePort(config.port);
