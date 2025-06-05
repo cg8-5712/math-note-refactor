@@ -29,6 +29,7 @@ class ImageController {
           order = order.filter(filename => images.includes(filename));
         } catch (err) {
           // If order.json doesn't exist, use alphabetical order
+          console.warn('Order file not found:', orderPath);
           order = [...images].sort();
         }
       } catch (err) {
@@ -115,6 +116,7 @@ class ImageController {
           await fsPromises.access(imagePath);
         }));
       } catch (err) {
+        console.error('Invalid image order:', images);
         return res.status(400).json({
           error: '部分图片不存在',
           code: 'IMAGES_NOT_FOUND'

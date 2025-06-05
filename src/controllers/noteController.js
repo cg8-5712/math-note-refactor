@@ -115,6 +115,7 @@ class NoteController {
           ];
         } catch (err) {
           // 如果没有 order.json，使用默认排序
+          console.log('Error reading order.json:', err);
           orderedImages = [...images].sort();
         }
       } catch (error) {
