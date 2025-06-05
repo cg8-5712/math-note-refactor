@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       };
 
-      // Don't set Content-Type header when sending FormData
       if (options.body instanceof FormData) {
         delete defaultOptions.headers['Content-Type'];
       }
@@ -93,6 +92,12 @@ document.addEventListener('DOMContentLoaded', function() {
       };
 
       const response = await fetch(requestUrl, mergedOptions);
+
+      // 检查是否重定向到登录页面
+      if (response.redirected && response.url.includes('/admin/login')) {
+        throw new Error('NOT_AUTHENTICATED');
+      }
+
       const contentType = response.headers.get('content-type');
       let data = null;
 
@@ -104,12 +109,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (!response.ok) {
+        // 处理 CSRF 失效
+        if (data?.code === 'INVALID_TOKEN' || data?.code === 'TOKEN_EXPIRED') {
+          throw new Error('CSRF_EXPIRED');
+        }
+        // 处理未登录
+        if (response.status === 401 || response.status === 403 || data?.code === 'UNAUTHORIZED') {
+          throw new Error('NOT_AUTHENTICATED');
+        }
         throw new Error(data?.error || '请求失败');
       }
 
       return data;
     } catch (error) {
-      console.error('Request failed:', error);
       throw error;
     }
   };
@@ -125,40 +137,41 @@ document.addEventListener('DOMContentLoaded', function() {
           <img src="${e.target.result}" alt="预览图片" data-filename="${file.name}">
           <button class="delete-image" type="button" data-filename="${file.name}">×</button>
         `;
-        
-        const deleteBtn = imageItem.querySelector('.delete-image');
-        deleteBtn.addEventListener('click', handleImageDelete);
-        
         resolve(imageItem);
       };
       reader.readAsDataURL(file);
     });
   };
 
-  // Image delete handler
-  const handleImageDelete = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!confirm('确定要删除这张图片吗？')) {
-      return;
-    }
+  // 事件委托：给 imageGrid 绑定一次性监听器，处理所有 .delete-image 按钮点击
+  if (imageGrid) {
+    imageGrid.addEventListener('click', function(e) {
+      const btn = e.target.closest('.delete-image');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleImageDelete(btn);
+      }
+    });
+  }
 
-    const btn = e.currentTarget;
+  // 修改 handleImageDelete 支持事件委托
+  const handleImageDelete = (btn) => {
+    if (!btn) return;
+    if (!confirm('确定要删除这张图片吗？')) return;
+
     const filename = btn.dataset.filename;
     const imageItem = btn.closest('.image-item');
-    
+
     if (imageItem) {
       const uploadIndex = currentState.pendingUploads.findIndex(
         item => item.file.name === filename
       );
-      
       if (uploadIndex > -1) {
         currentState.pendingUploads.splice(uploadIndex, 1);
       } else {
         currentState.pendingDeletes.push(filename);
       }
-      
       imageItem.remove();
       handleStateChange();
       updateImageOrder();
@@ -224,8 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      // 保存时移除 beforeunload，防止弹窗
       window.removeEventListener('beforeunload', unloadHandler);
 
       const titleInput = form.querySelector('#title');
@@ -234,83 +245,105 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!title) {
         alert('标题不能为空');
         titleInput?.focus();
-        // 恢复 beforeunload
         window.addEventListener('beforeunload', unloadHandler);
         return;
       }
 
-      try {
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('_csrf', csrfToken);
-        formData.append('_method', 'PUT');
+      let triedRefresh = false;
 
-        // 处理待删除的图片
-        if (currentState.pendingDeletes.length > 0) {
-          for (const filename of currentState.pendingDeletes) {
-            try {
-              await makeAuthenticatedRequest(
-                `${window.location.pathname}/images/${filename}`,
-                { method: 'DELETE' }
-              );
-            } catch (error) {
-              console.error(`Failed to delete image ${filename}:`, error);
+      const doSave = async () => {
+        try {
+          const formData = new FormData();
+          formData.append('title', title);
+          formData.append('_csrf', csrfToken);
+          formData.append('_method', 'PUT');
+
+          // 处理待删除的图片
+          if (currentState.pendingDeletes.length > 0) {
+            for (const filename of currentState.pendingDeletes) {
+              try {
+                await makeAuthenticatedRequest(
+                  `${window.location.pathname}/images/${filename}`,
+                  { method: 'DELETE' }
+                );
+              } catch (error) {
+                console.error(`Failed to delete image ${filename}:`, error);
+              }
             }
           }
-        }
 
-        // 添加待上传的图片
-        if (currentState.pendingUploads.length > 0) {
-          currentState.pendingUploads.forEach(({file}) => {
-            formData.append('images', file);
-          });
-        }
+          // 添加待上传的图片
+          if (currentState.pendingUploads.length > 0) {
+            currentState.pendingUploads.forEach(({file}) => {
+              formData.append('images', file);
+            });
+          }
 
-        // 添加图片顺序
-        const currentImages = Array.from(
-          document.querySelectorAll('.image-item img')
-        ).map(img => img.dataset.filename)
-          .filter(filename => !currentState.pendingDeletes.includes(filename));
+          // 添加图片顺序
+          const currentImages = Array.from(
+            document.querySelectorAll('.image-item img')
+          ).map(img => img.dataset.filename)
+            .filter(filename => !currentState.pendingDeletes.includes(filename));
+          formData.append('imageOrder', JSON.stringify(currentImages));
 
-        formData.append('imageOrder', JSON.stringify(currentImages));
-
-        // 显示保存状态
-        if (saveStatus) {
-          saveStatus.style.display = 'flex';
-          saveStatus.querySelector('.status-text').textContent = '正在保存...';
-        }
-
-        // 发送请求
-        const response = await makeAuthenticatedRequest(window.location.pathname, {
-          method: 'POST',
-          body: formData
-        });
-
-        if (response.success) {
           if (saveStatus) {
-            saveStatus.querySelector('.status-text').textContent = '保存成功';
+            saveStatus.style.display = 'flex';
+            saveStatus.querySelector('.status-text').textContent = '正在保存...';
+          }
+
+          const response = await makeAuthenticatedRequest(window.location.pathname, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (response && response.success) {
+            if (saveStatus) {
+              saveStatus.querySelector('.status-text').textContent = '保存成功';
+              setTimeout(() => {
+                saveStatus.style.display = 'none';
+                window.location.href = '/admin';
+              }, 500);
+            } else {
+              window.location.href = '/admin';
+            }
+          } else {
+            throw new Error(response?.error || '保存失败');
+          }
+        } catch (error) {
+          // 如果是 CSRF 失效，刷新 token 并重试一次
+          if (error.message === 'CSRF_EXPIRED' && !triedRefresh) {
+            triedRefresh = true;
+            // 获取新 token（通过 GET 当前页面）
+            try {
+              const resp = await fetch(window.location.pathname, { credentials: 'same-origin' });
+              const html = await resp.text();
+              // 从 meta 或 input 重新获取 token
+              const match = html.match(/name="_csrf" value="([^"]+)"/) || html.match(/name="csrf-token" content="([^"]+)"/);
+              if (match) {
+                csrfToken = match[1];
+                if (csrfInput) csrfInput.value = csrfToken;
+                return doSave();
+              }
+            } catch (e) {}
+          }
+          // 如果未登录，跳转登录页
+          if (error.message === 'NOT_AUTHENTICATED') {
+            alert('登录已过期，请重新登录');
+            window.location.href = '/admin/login';
+            return;
+          }
+          window.addEventListener('beforeunload', unloadHandler);
+          alert(error.message || '保存失败，请重试');
+          if (saveStatus) {
+            saveStatus.querySelector('.status-text').textContent = '保存失败';
             setTimeout(() => {
               saveStatus.style.display = 'none';
-              window.location.href = '/admin';
-            }, 500);
-          } else {
-            window.location.href = '/admin';
+            }, 3000);
           }
-        } else {
-          throw new Error(response.error || '保存失败');
         }
-      } catch (error) {
-        // 保存失败时恢复 beforeunload
-        window.addEventListener('beforeunload', unloadHandler);
-        console.error('Save failed:', error);
-        alert(error.message || '保存失败，请重试');
-        if (saveStatus) {
-          saveStatus.querySelector('.status-text').textContent = '保存失败';
-          setTimeout(() => {
-            saveStatus.style.display = 'none';
-          }, 3000);
-        }
-      }
+      };
+
+      doSave();
     });
   }
 

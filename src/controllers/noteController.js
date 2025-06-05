@@ -18,35 +18,58 @@ class NoteController {
 
   async getNote(req, res, next) {
     try {
-      const plainDate = req.params.date;  // YYYYMMDD format
+      const plainDate = req.params.date;
       const formattedDate = DateFormatter.convertFromPlainDate(plainDate);
       
       const notes = await readNoteData();
       const note = notes.find(n => n.date === formattedDate);
       
       if (!note) {
-        return res.status(404).render('error', { 
+        return res.status(404).render('error', {
           message: '笔记不存在',
           error: { status: 404 }
         });
       }
 
-      // 获取图片文件列表
+      // 获取图片文件列表和顺序
       const imageDir = path.join(__dirname, '../../public/images', plainDate);
+      const orderPath = path.join(imageDir, 'order.json');
       let images = [];
+      let orderedImages = [];
+
       try {
         const files = await fsPromises.readdir(imageDir);
         images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+        
+        // 尝试读取 order.json
+        try {
+          const orderJson = await fsPromises.readFile(orderPath, 'utf8');
+          const orderArray = JSON.parse(orderJson);
+          
+          // Validate that orderArray is actually an array
+          if (!Array.isArray(orderArray)) {
+            throw new Error('Invalid order.json format: expected array');
+          }
+          
+          // 使用 order.json 的顺序，同时添加未在 order.json 中的图片
+          orderedImages = [
+            ...orderArray.filter(filename => images.includes(filename)),
+            ...images.filter(filename => !orderArray.includes(filename))
+          ];
+        } catch (err) {
+          console.log('Error reading order.json:', err);
+          orderedImages = [...images].sort();
+        }
       } catch (error) {
         console.log('No images found:', error);
       }
 
-      res.render('admin/edit', { 
-        title: '修改笔记',
+      res.render('admin/edit', {
+        title: '编辑笔记',
         note: {
           ...note,
           plainDate,
-          images
+          images: orderedImages
         }
       });
     } catch (error) {
@@ -146,7 +169,11 @@ class NoteController {
       // Parse image order
       let imageOrder = [];
       try {
-        imageOrder = JSON.parse(req.body.imageOrder || '[]');
+        const parsedOrder = JSON.parse(req.body.imageOrder || '[]');
+        if (!Array.isArray(parsedOrder)) {
+          throw new Error('Invalid image order format: expected array');
+        }
+        imageOrder = parsedOrder;
         console.log('\nImage Order:');
         console.log('----------------------------------');
         console.log(imageOrder);
