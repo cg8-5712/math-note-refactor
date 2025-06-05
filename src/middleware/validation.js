@@ -16,8 +16,10 @@ const validateDate = (req, res, next) => {
     DateFormatter.convertFromPlainDate(date);
     next();
   } catch (error) {
+    console.error('Date validation error:', error);
     return res.status(400).json({
       error: '无效的日期',
+      details: error,
       code: 'INVALID_DATE'
     });
   }

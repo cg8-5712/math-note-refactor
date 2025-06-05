@@ -88,7 +88,7 @@ class DateFormatter {
       throw new Error('Invalid full date format: must be YYYY.MM.DD');
     }
 
-    const [_, year, month, day] = matches;
+    const [, year, month, day] = matches;
     const date = new Date(year, parseInt(month) - 1, day);
 
     if (isNaN(date.getTime())) {
