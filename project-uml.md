@@ -1,61 +1,88 @@
 # Math Note Project UML Diagrams
 
-## 类图
 ```mermaid
 classDiagram
     class NoteController {
-        -readNoteData()
-        -saveNoteData()
-        +getDashboard(req, res, next)
-        +getNote(req, res, next)
-        +createNote(req, res, next)
-        +updateNote(req, res, next)
-        +deleteNote(req, res, next)
+        -readNoteData(): Promise<Note[]>
+        -saveNoteData(notes: Note[]): Promise<void>
+        -deleteImageDirectory(path: string): Promise<void>
+        +getDashboard(req: Request, res: Response, next: NextFunction)
+        +getNote(req: Request, res: Response, next: NextFunction)
+        +viewNote(req: Request, res: Response, next: NextFunction)
+        +createNote(req: Request, res: Response, next: NextFunction)
+        +updateNote(req: Request, res: Response, next: NextFunction)
+        +deleteNote(req: Request, res: Response, next: NextFunction)
     }
 
     class ImageController {
-        +getImages(req, res, next)
-        +uploadImages(req, res, next)
-        +deleteImage(req, res, next)
-        +updateImageOrder(req, res, next)
-        +restoreImages(req, res, next)
+        +getImages(req: Request, res: Response, next: NextFunction)
+        +uploadImages(req: Request, res: Response, next: NextFunction)
+        +deleteImage(req: Request, res: Response, next: NextFunction)
+        +updateImageOrder(req: Request, res: Response, next: NextFunction)
     }
 
-    class DateFormatter {
-        +formatDate(date)
-        +isValidDate(dateStr)
-        +convertToFullDate(dateStr)
-        +convertFromPlainDate(dateStr)
+    class AuthController {
+        +showLoginForm(req: Request, res: Response)
+        +login(req: Request, res: Response)
+        +logout(req: Request, res: Response)
+        -verifyPassword(password: string): boolean
     }
 
     NoteController --> DateFormatter
     ImageController --> DateFormatter
+    NoteController ..> ValidationMiddleware
+    ImageController ..> ValidationMiddleware
+    NoteController --> Config
+    ImageController --> Config
+    AuthController --> Config
+    NoteController ..> Storage
 ```
 
-## 流程图
 ```mermaid
-sequenceDiagram
-    participant Browser
-    participant Server
-    participant Controller
-    participant FileSystem
+classDiagram
+    class Express {
+        +app: Application
+        +router: Router
+        +static: Function
+        +json(): Middleware
+        +urlencoded(): Middleware
+    }
 
-    Browser->>Server: 拖拽图片排序请求
-    Server->>Server: CSRF验证
-    Server->>Controller: 处理排序请求
-    Controller->>FileSystem: 更新排序文件
-    FileSystem-->>Controller: 更新成功
-    Controller-->>Server: 返回结果
-    Server-->>Browser: 响应结果
+    class Request {
+        +params: object
+        +body: object
+        +files: object[]
+        +session: Session
+        +csrfToken(): string
+    }
+
+    Express --> Request
+    Express --> Response
+    Request --> Session
+    Express --> Multer
 ```
 
-## 状态图
 ```mermaid
-stateDiagram-v2
-    [*] --> 浏览
-    浏览 --> 编辑: 点击编辑
-    编辑 --> 拖拽排序: 拖动图片
-    拖拽排序 --> 保存排序: 松开图片
-    保存排序 --> 编辑: 保存成功
-    编辑 --> 浏览: 保存或取消
+classDiagram
+    class Note {
+        +date: string
+        +title: string
+        +uploadDate: string
+        +displayDate: string
+        +plainDate: string
+        +images: string[]
+    }
+
+    class DateFormats {
+        +date: string
+        +displayDate: string
+        +fullDate: string
+        +timestamp: string
+        +sortableDate: string
+        +isoDate: string
+    }
+
+    Note --> DateFormats
+    SecurityConfig --> CSRFConfig
+    Note ..> UploadConfig
 ```
